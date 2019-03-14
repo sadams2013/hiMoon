@@ -1,0 +1,13 @@
+.coverage
+.pytest_cache/
+jupyter/
+__pycache__/
+translations/
+.vscode/
+*.pyc
+*.bam
+*.bam.bai
+*.vcf*
+*.png
+scripts/
+.DS_Store
