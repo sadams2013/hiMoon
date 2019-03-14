@@ -31,21 +31,21 @@ class TestSubject(unittest.TestCase):
         self.subject_object_bam = subject.Subject(
             prefix = "",
             genes = [gene.Gene("hiMoon/tests/CYP2D6.NC_000022.11haplotypes.tsv")],
-            alignment_file = "hiMoon/tests/NA18565.chr22.bam"
+            alignment_file = "hiMoon/tests/NA18565.cyp2d6.bam"
         )
 
 class TestAlignment(unittest.TestCase):
 
     def test_alignment(self):
         self.alignment_obj = alignment.AlignmentData(
-            alignment_file = "hiMoon/tests/NA18565.chr22.bam"
+            alignment_file = "hiMoon/tests/NA18565.cyp2d6.bam"
             )
         self.var_range_1 = self.alignment_obj.get_range(22, 42128240, 42128245)
         self.var_range_2 = self.alignment_obj.get_range(22, 42110000, 42140000)
     
     def test_alignment_insertion(self):
         alignment_obj = alignment.AlignmentData(
-            alignment_file = "hiMoon/tests/NA19239.chr22.ins.bam"
+            alignment_file = "hiMoon/tests/NA19239.cyp2d6.bam"
             )
         alleles = alignment_obj.call_alleles("22", 42130650, 42130660)
 
@@ -53,10 +53,10 @@ class TestCNV(unittest.TestCase):
 
     def test_cnv(self):
           case_bam = alignment.AlignmentData(
-               alignment_file="hiMoon/tests/NA18945.chr22.bam"
+               alignment_file="hiMoon/tests/NA18945.cyp2d6.bam"
           )
           control_bam = alignment.AlignmentData(
-               alignment_file="hiMoon/tests/NA19239.chr22.ins.bam"
+               alignment_file="hiMoon/tests/NA19239.cyp2d6.bam"
           )
           case = case_bam.get_read_array("22", 42128000,42130000)
           control = control_bam.get_read_array("22", 42128000,42130000)

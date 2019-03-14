@@ -5,9 +5,6 @@ __pycache__/
 translations/
 .vscode/
 *.pyc
-*.bam
-*.bam.bai
-*.vcf*
 *.png
 scripts/
 .DS_Store
