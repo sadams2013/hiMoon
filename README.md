@@ -19,8 +19,7 @@ User assumes all risk associated with data generated from this platform.
 - Pharmacogenomics platforms are diverse (e.g. array, WES, WGS) and each platform is variable. 
 - Applications have different needs that require tuning of software tools. 
 - Efforts by existing authorities (CPIC, PharmVar, PharmGKB) to standardize definitions are sporadically implemented. 
-- An existing open source solution for pharmacogenomics haplotyping and structural variation determination does not exist. 
-    - Note: PharmCAT relies on Astrolabe. which is closed source and not available without cost to non-academic entities.
+- An existing open source (with open license) solution for pharmacogenomics haplotyping and structural variation determination does not exist. 
 
 ## Description
 
