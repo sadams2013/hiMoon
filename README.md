@@ -1,5 +1,7 @@
 # hiMoon: Determine Pharmacogenomics Alleles and Structural Variation
 
+[![Build Status](https://travis-ci.org/sadams2013/hiMoon.svg?branch=master)](https://travis-ci.org/sadams2013/hiMoon)
+
 ## Disclaimer and Status
 
 **This is a project in ongoing active development that is currently in pre-alpha.**
