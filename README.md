@@ -43,9 +43,11 @@ It will probably work on Windows, but might need some tweaks.
 
 It is highly recommended that you install hiMoon in an isolated Python environment (e.g. virtualenv). 
 
+```
 git clone https://github.com/sadams2013/hiMoon.git
 pip install -r requirements.txt
 python setup.py install
+```
 
 ## Operation of hiMoon
 
