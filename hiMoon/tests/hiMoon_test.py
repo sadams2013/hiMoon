@@ -58,6 +58,6 @@ class TestCNV(unittest.TestCase):
           control_bam = alignment.AlignmentData(
                alignment_file="hiMoon/tests/NA19239.cyp2d6.bam"
           )
-          case = case_bam.get_read_array("22", 42128000,42130000)
-          control = control_bam.get_read_array("22", 42128000,42130000)
+          case = case_bam.get_read_array("22", 42120000,42130000)
+          control = control_bam.get_read_array("22", 42120000,42130000)
           a = cnv.find_cnv(case, control, 1000)

@@ -56,34 +56,45 @@ class Subject:
             self.cnv()
         elif alignment_file:
             self.cnv_simple()
+    
+    @staticmethod
+    def sort_cnv(prefix, region, chromosome, cnv_data):
+        regions = []
+        ss = {}
+        used = []
+        for span in cnv_data:
+            if span[2] <= 0.6 or span[2] >= 1.4: 
+                start = span[0]
+                stop = span[1]
+                rat = span[2]
+                if start not in used and int(stop) > int(start):
+                    ss[start] = (stop, rat)
+        for start, span_data in ss.items():
+            regions.append({
+                "PREFIX": prefix,
+                "REGION": region,
+                "CHROMOSOME": chromosome,
+                "SPAN_START": int(start),
+                "SPAN_STOP": int(span_data[0]),
+                "LENGTH": int(span_data[0]) - int(start),
+                "SPAN_RATIO": span_data[1]
+            })
+        print(regions)
+        return regions
             
     
     def cnv(self):
         cnv_regions = []
         for region, data in CNV_REGIONS.items():
-                cnv_data = find_cnv(
-                    case = self.bam.get_read_array(data[0], int(data[1]), int(data[2])),
-                    control = self.copy_number_control.get_read_array(data[0], int(data[1]), int(data[2])),
-                    penalty = CNV_PENALTY)
-                ss = {}
-                used = []
-                for span in cnv_data:
-                    if span[2] <= 0.6 or span[2] >= 1.4: 
-                        start = span[0]
-                        stop = span[1]
-                        rat = span[2]
-                        if start not in used and int(stop) > int(start):
-                            ss[start] = (stop, rat)
-                for start, span_data in ss.items():
-                    cnv_regions.append({
-                        "PREFIX": self.prefix,
-                        "REGION": region,
-                        "CHROMOSOME": data[0],
-                        "SPAN_START": int(start),
-                        "SPAN_STOP": int(span_data[0]),
-                        "LENGTH": int(span_data[0]) - int(start),
-                        "SPAN_RATIO": span_data[1]
-                    })
+            cnv_data = find_cnv(
+                case = self.bam.get_read_array(data[0], int(data[1]), int(data[2])),
+                control = self.copy_number_control.get_read_array(data[0], int(data[1]), int(data[2])),
+                penalty = CNV_PENALTY)
+            cnv_regions += self.sort_cnv(
+                self.prefix, 
+                region,
+                data[0],
+                cnv_data)
         self.cnv_regions = self._simplify_cnv(cnv_regions)
 
 
@@ -106,7 +117,7 @@ class Subject:
             except IndexError:
                 continue
 
-    
+
     def get_gene(self, gene: Gene) -> dict:
         """
         Wrapper for vcf parser and bam parser
