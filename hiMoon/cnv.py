@@ -13,7 +13,7 @@ import numpy as np
 from numba import int32, float32, jit, void
 
 
-@jit(float32(int32), nopython=True, parallel=True)
+@jit(float32(int32), nopython=True)
 def calc_penalty(n: int) -> float:
     """
     Penalization factor (lambda)
@@ -24,7 +24,7 @@ def calc_penalty(n: int) -> float:
     return 0.5 * np.log(n)
 
 
-@jit(float32(int32, int32, float32), nopython=True, cache=True)
+@jit(float32(int32, int32, float32), nopython=True)
 def log_lik(t: int,c: int,l: float) -> float:
     """
     Log likelihood calculation
@@ -36,7 +36,7 @@ def log_lik(t: int,c: int,l: float) -> float:
         return 0
 
 
-@jit(int32(int32, int32, int32[:]), nopython=True, cache=True)
+@jit(int32(int32, int32, int32[:]), nopython=True)
 def grc_on(j_pos: int, i_pos: int, reads: int) -> int:
     """
     j_pos = possible CNV start
@@ -47,7 +47,7 @@ def grc_on(j_pos: int, i_pos: int, reads: int) -> int:
     return ((j_pos <= reads) & (i_pos >= reads)).sum()
 
 
-@jit(int32(int32, int32, int32[:]), nopython=True, cache=True)
+@jit(int32(int32, int32, int32[:]), nopython=True)
 def grc_off(j_pos: int, i_pos: int, reads: int) -> int:
     """
     j_pos = possible CNV start
@@ -58,7 +58,7 @@ def grc_off(j_pos: int, i_pos: int, reads: int) -> int:
     return ((j_pos > reads) | (i_pos < reads)).sum()
 
 
-@jit(float32[:,:](int32[:], int32[:], int32), nopython=True, cache=True)
+@jit(float32[:,:](int32[:], int32[:], int32), nopython=True)
 def find_cnv(case: np.ndarray, control: np.ndarray, penalty: int) -> np.ndarray:
     """
     case = numpy array of read starting positions in the region of interest (case file)
