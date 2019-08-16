@@ -134,4 +134,7 @@ try:
 except KeyError:
     CNV_REGIONS = None
 
-CNV_PENALTY = int(config["CNV PARAMETERS"]["penalty"])
+try:
+    CNV_PENALTY = int(config["CNV PARAMETERS"]["penalty"])
+except KeyError:
+    CNV_PENALTY = 5
