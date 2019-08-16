@@ -100,7 +100,7 @@ except KeyError:
     logging.info(
         "No genes included in bam genes."
     )
-    BAM_GENES = None
+    BAM_GENES = []
 
 if update_config:
     with open(config_file, "w") as configfile:
