@@ -86,11 +86,11 @@ class Subject:
     
     def cnv(self):
         cnv_regions = []
-        for region, data in CNV_REGIONS.items():
+        for region, data in self.config.CNV_REGIONS.items():
             cnv_data = find_cnv(
                 case = self.bam.get_read_array(data[0], int(data[1]), int(data[2])),
                 control = self.copy_number_control.get_read_array(data[0], int(data[1]), int(data[2])),
-                penalty = CNV_PENALTY)
+                penalty = self.config.CNV_PENALTY)
             cnv_regions += self.sort_cnv(
                 self.prefix, 
                 region,
@@ -100,7 +100,7 @@ class Subject:
 
 
     def cnv_simple(self):
-        for region, data in CNV_REGIONS.items():
+        for region, data in self.config.CNV_REGIONS.items():
             try:
                 span_ratio = find_cnv_simple(
                     case = self.bam.get_read_array(data[0], int(data[1]), int(data[2])),
