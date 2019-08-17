@@ -4,7 +4,7 @@ and iteratively decides if a haplotype is matched based
 on a translation table (in a gene)
 """
 
-from . import IUPAC_CODES, logging
+from . import logging
 
 
 class MatchCounter:
@@ -12,8 +12,9 @@ class MatchCounter:
     Tests for each star allele
     """
 
-    def __init__(self, haplotype, genotypes, chromosome):
+    def __init__(self, haplotype, genotypes, chromosome, config):
         self.hap_positions = haplotype
+        self.config = config
         self.chromosome = chromosome
         self.genotypes = genotypes
         self.missingsum = 0
@@ -67,8 +68,8 @@ class MatchCounter:
             self._test_alleles(alleles, position["Variant Allele"], position["Variant Start"])
     
     def _test_alleles(self, user_alleles, temp_alt, temp_pos):
-        if temp_alt in IUPAC_CODES.keys():
-            temp_alt = IUPAC_CODES[temp_alt]
+        if temp_alt in self.config.IUPAC_CODES.keys():
+            temp_alt = self.config.IUPAC_CODES[temp_alt]
         else:
             # put this in tuple so the 'in' test doesn't match part of string for in/del
             temp_alt = (temp_alt,)

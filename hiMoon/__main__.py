@@ -6,8 +6,10 @@ import csv
 
 from .subject import Subject
 from .gene import Gene
+from .config import ConfigData
 
 from . import logging
+
 
 
 def main():
@@ -33,7 +35,10 @@ def main():
     parser.add_argument("-p", "--output-prefix",
                         default="out",
                         help="prefix for output files.")
-                        
+    parser.add_argument("-cf", "--config-file",
+                        default="config.ini",
+                        help="path to config file.")
+    
     args = vars(parser.parse_args())
 
     # The log can get pretty verbose if translation tables are very long. 
@@ -50,6 +55,7 @@ def main():
 def haplotyper(args: dict):
     """
     """
+    config = ConfigData(args["config_file"])
     genes = []
     if args["bamfile"]:
         bam_file = os.path.abspath(args["bamfile"])
@@ -66,11 +72,16 @@ def haplotyper(args: dict):
 
     # Test if single translation table argued, or directory of files. 
     if args["translation_tables"][-3:] == "tsv":
-        genes.append(Gene(os.path.abspath(args["translation_tables"])))
+        genes.append(Gene(os.path.abspath(args["translation_tables"]), config))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(Gene(os.path.abspath(translation_table)))
-    subj = Subject(prefix = args["output_prefix"], genes = genes, vcf_file=vcf_file, alignment_file=bam_file, copy_number_control=copy_number_control)
+            genes.append(Gene(os.path.abspath(translation_table), config))
+    subj = Subject(prefix = args["output_prefix"], 
+                   genes = genes, 
+                   config = config,
+                   vcf_file=vcf_file, 
+                   alignment_file=bam_file, 
+                   copy_number_control=copy_number_control)
     if args["output_directory"]:
         out_dir = args["output_directory"]
         write_report(out_dir, subj, args["output_prefix"])

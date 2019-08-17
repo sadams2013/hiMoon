@@ -6,8 +6,7 @@ Haplotype contains methods for gene specific haplotypes
 
 import csv
 
-from . import VARIANT_QUERY_PARAMETERS, BAM_GENES, CHROMOSOME_ACCESSIONS, config, logging
-
+from . import logging
 
 class Gene:
     """
@@ -16,11 +15,12 @@ class Gene:
     and its haplotypes
     """
 
-    def __init__(self, translation_table):
+    def __init__(self, translation_table, config):
         self.haplotypes = {}
         self.gene = None
         self.accession = None
         self.ref = "Ref"
+        self.config = config
         with open(translation_table, 'rt') as trans_file:
             self.version = trans_file.readline().strip("#version=\n\t")
             haplotype_file_lines = csv.DictReader(trans_file, delimiter="\t")
@@ -51,15 +51,15 @@ class Gene:
         return self.gene
 
     def chromosome(self) -> int:
-        return int(CHROMOSOME_ACCESSIONS[
+        return int(self.config.CHROMOSOME_ACCESSIONS[
             self.accession
         ])
 
-    def position_min(self, offset=VARIANT_QUERY_PARAMETERS["5p_offset"]) -> int:
-        return min([hap.get_min() for name, hap in self.haplotypes.items()]) - int(offset)
+    def position_min(self) -> int:
+        return min([hap.get_min() for name, hap in self.haplotypes.items()]) - int(self.config.VARIANT_QUERY_PARAMETERS["5p_offset"])
 
-    def position_max(self, offset=VARIANT_QUERY_PARAMETERS["3p_offset"]) -> int:
-        return max([hap.get_max() for name, hap in self.haplotypes.items()]) + int(offset)
+    def position_max(self) -> int:
+        return max([hap.get_max() for name, hap in self.haplotypes.items()]) + int(self.config.VARIANT_QUERY_PARAMETERS["3p_offset"])
 
 
 class Haplotype:

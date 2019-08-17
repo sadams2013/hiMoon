@@ -4,15 +4,15 @@ import numpy as np
 
 from pysam import AlignmentFile
 from functools import reduce
-from . import MAX_PILEUP_DEPTH, CALL_THRESHOLD, MIN_READS, MIN_Q, MIN_MAPQ
 
 from .gene import Gene
 
 class AlignmentData:
 
-    def __init__(self, alignment_file: str, type = "b"):
+    def __init__(self, alignment_file: str, config, type = "b"):
         self.alignment_file = alignment_file
         self.alignment_object = AlignmentFile(alignment_file, f"r{type}")
+        self.config = config
         try:
             self.alignment_object.check_index()
         except AttributeError:
@@ -32,9 +32,7 @@ class AlignmentData:
         self, 
         chrom: str, 
         start: int, 
-        stop: int, 
-        min_cov: int = MIN_READS, 
-        cutoff_freq: float = CALL_THRESHOLD
+        stop: int
         ) -> dict:
         positions_out = {}
         gene_pileups = self.get_pileup( chrom, start, stop)
@@ -42,8 +40,8 @@ class AlignmentData:
             position = pileupcolumn.reference_pos
             positions_out[f"{chrom}:{position + 1}"] = self._call_from_reads(
                     pileupcolumn.get_query_sequences(add_indels=True), 
-                    min_cov, 
-                    cutoff_freq
+                    self.config.MIN_READS, 
+                    self.config.CALL_THRESHOLD
                     )
         return positions_out
 
@@ -63,19 +61,16 @@ class AlignmentData:
         self, 
         chrom: str, 
         start: int, 
-        stop: int,
-        min_mapping_quality: int = MIN_MAPQ,
-        min_base_quality: int = MIN_Q,
-        max_depth: int = MAX_PILEUP_DEPTH) -> list:
+        stop: int) -> list:
         try:
             return self.alignment_object.pileup(
                 contig = str(chrom), 
                 start = start, 
                 stop = stop, 
                 truncate = True,
-                max_depth = max_depth,
-                min_mapping_quality = min_mapping_quality,
-                min_base_quality = min_base_quality
+                max_depth = self.config.MAX_PILEUP_DEPTH,
+                min_mapping_quality = self.config.MIN_MAPQ,
+                min_base_quality = self.config.MIN_Q
         )
         except ValueError:
             return self.alignment_object.pileup(
@@ -83,9 +78,9 @@ class AlignmentData:
                 start = start, 
                 stop = stop,
                 truncate = True,
-                max_depth = max_depth,
-                min_mapping_quality = min_mapping_quality,
-                min_base_quality = min_base_quality
+                max_depth = self.config.MAX_PILEUP_DEPTH,
+                min_mapping_quality = self.config.MIN_MAPQ,
+                min_base_quality = self.config.MIN_Q
                 )
 
     def _fetch_wrapper(self, chrom, start, stop):

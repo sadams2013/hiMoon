@@ -12,8 +12,7 @@ from .alignment import AlignmentData
 from .gene import Gene
 from .pick_alleles import AllelePicker
 from .cnv import find_cnv, find_cnv_simple
-
-from . import logging, BAM_GENES, CNV_REGIONS, CNV_PENALTY
+from . import logging
 
 
 class Subject:
@@ -27,6 +26,7 @@ class Subject:
         self, 
         prefix: str,
         genes: [], 
+        config,
         vcf_file: str = None, 
         alignment_file: str = None, 
         copy_number_control: str = None):
@@ -39,17 +39,18 @@ class Subject:
         self.vcf = None
         self.copy_number_control = None
         self.normalization_factors = {}
+        self.config = config
         if vcf_file:
             self.vcf = VCFParse(vcf_file = vcf_file)
         if alignment_file:
-            self.bam = AlignmentData(alignment_file = alignment_file)
+            self.bam = AlignmentData(alignment_file = alignment_file, config = self.config)
         if copy_number_control:
-            self.copy_number_control = AlignmentData(alignment_file = copy_number_control)
+            self.copy_number_control = AlignmentData(alignment_file = copy_number_control, config = self.config)
         for gene in genes:
             genotypes = self.get_gene(gene)
             haplotypes = {}
             for name, haplotype in gene.haplotypes.items():
-                haplotypes[name] = MatchCounter(haplotype, genotypes, gene.chromosome())
+                haplotypes[name] = MatchCounter(haplotype, genotypes, gene.chromosome(), self.config)
             self.genes[str(gene)] = haplotypes
             self.called_haplotypes[str(gene)] = AllelePicker(gene, haplotypes).pick_stars()
         if alignment_file and copy_number_control:
@@ -122,7 +123,7 @@ class Subject:
         """
         Wrapper for vcf parser and bam parser
         """
-        if str(gene) in BAM_GENES and self.bam or not self.vcf:
+        if str(gene) in self.config.BAM_GENES and self.bam or not self.vcf:
             return self.bam.get_range(
                                     gene.chromosome(),
                                     gene.position_min(), 
