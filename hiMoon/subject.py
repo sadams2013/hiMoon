@@ -29,7 +29,10 @@ class Subject:
         config,
         vcf_file: str = None, 
         alignment_file: str = None, 
-        copy_number_control: str = None):
+        copy_number_control: str = None, 
+        vcf_file_index = None,
+        alignment_file_index = None, 
+        copy_number_control_index = None):
         self.prefix = prefix
         self.called_haplotypes = {}
         self.cnv_regions = []
@@ -41,11 +44,11 @@ class Subject:
         self.normalization_factors = {}
         self.config = config
         if vcf_file:
-            self.vcf = VCFParse(vcf_file = vcf_file)
+            self.vcf = VCFParse(vcf_file = vcf_file, index = vcf_file_index)
         if alignment_file:
-            self.bam = AlignmentData(alignment_file = alignment_file, config = self.config)
+            self.bam = AlignmentData(alignment_file = alignment_file, config = self.config, index = alignment_file_index)
         if copy_number_control:
-            self.copy_number_control = AlignmentData(alignment_file = copy_number_control, config = self.config)
+            self.copy_number_control = AlignmentData(alignment_file = copy_number_control, config = self.config, index = copy_number_control_index)
         for gene in genes:
             genotypes = self.get_gene(gene)
             haplotypes = {}

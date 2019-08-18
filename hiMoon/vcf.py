@@ -9,11 +9,11 @@ from . import logging
 
 
 class VCFParse:
-    def __init__(self, vcf_file: str):
+    def __init__(self, vcf_file: str, index = None):
         """
         Create a new VCF file object.
         """
-        self.vcf_file = VariantFile(vcf_file)
+        self.vcf_file = VariantFile(vcf_file, index_filename = index)
 
     def get_range(self, chrom: str, minloc: int, maxloc: int) -> dict:
         """Returns range based on chromosome and min/max locations"""

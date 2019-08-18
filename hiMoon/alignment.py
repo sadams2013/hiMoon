@@ -9,9 +9,9 @@ from .gene import Gene
 
 class AlignmentData:
 
-    def __init__(self, alignment_file: str, config, type = "b"):
+    def __init__(self, alignment_file: str, config, type = "b", index = None):
         self.alignment_file = alignment_file
-        self.alignment_object = AlignmentFile(alignment_file, f"r{type}")
+        self.alignment_object = AlignmentFile(alignment_file, f"r{type}", index_filename = index)
         self.config = config
         try:
             self.alignment_object.check_index()
