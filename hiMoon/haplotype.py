@@ -4,19 +4,29 @@ import sys
 
 from pulp import *
 
+from .gene import Gene
+
 
 class Haplotype:
 
-    def __init__(self, gene):
+    def __init__(self, gene: Gene, genotypes: dict) -> None:
+        """Subject level haplotypes for a given gene
+        
+        Args:
+            gene (Gene): gene.Gene object
+            genotypes (dict): subject's genotypes
+        """
         self.translation_table = gene.translation_table
-        self.ref = gene.ref
         self.chromosome = gene.chromosome
         self.version = gene.version
+        self.genotypes = genotypes
 
-    def table_matcher(self, genotypes):
+    def table_matcher(self) -> None:
+        """Matches translation table with the subject's genotypes
+        """
         self.matched = True
         self.translation_table["MATCH"] = self.translation_table.apply(
-            lambda x: self._match(x, genotypes),
+            lambda x: self._match(x, self.genotypes),
             axis = 1
         )
         self.translation_table["VAR_ID"] = self.translation_table.apply(
@@ -29,7 +39,16 @@ class Haplotype:
         self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
-    def _mod_alt(self, alt, ref):
+    def _mod_alt(self, alt: str, ref: str) -> str:
+        """Modifies alt from VCF to standardized form
+        
+        Args:
+            alt (str): alt allele
+            ref (str): ref allele
+        
+        Returns:
+            str: reformatted alt allele
+        """
         # if its a del, needs to return -s
         # if its an ins, needs to return just what is inserted
         if len(ref) > len(alt):
@@ -39,7 +58,16 @@ class Haplotype:
         else:
             return f's{alt}'
     
-    def _mod_ref(self, var_type, alt):
+    def _mod_ref(self, var_type: str, alt: str) -> str:
+        """Modifies the translation table ref to a standardized form
+        
+        Args:
+            var_type (str): insertion, deletion, or substitution
+            alt (str): allele from translation table
+        
+        Returns:
+            [str]: modified allele 
+        """
         if var_type == "insertion":
             return f'id{alt}'
         elif var_type == "deletion":

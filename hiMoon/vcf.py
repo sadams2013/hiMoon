@@ -9,15 +9,26 @@ from . import logging
 
 
 class VarFile:
-    def __init__(self, vcf_file: str):
-        """
-        Create a new VCF file object.
+    def __init__(self, vcf_file: str) -> None:
+        """VarFile object, basically a wrapper for pysam VariantFile
+        
+        Args:
+            vcf_file (str): path to VCF/VCF.GZ/BCF file (needs to be indexed)
         """
         self.vcf_file = VariantFile(vcf_file)
         self.samples = list(self.vcf_file.header.samples)
     
     def get_range(self, chrom: str, minloc: int, maxloc: int) -> dict:
-        """Returns range based on chromosome and min/max locations"""
+        """Returns a range of variants for all samples in a VCF file
+        
+        Args:
+            chrom (str): chromosome
+            minloc (int): starting position
+            maxloc (int): ending position
+        
+        Returns:
+            dict: variants with a common ID schema that is matched by other methods
+        """
         positions_out = {}
         try:
             positions = self.vcf_file.fetch(str(chrom), minloc, maxloc)
