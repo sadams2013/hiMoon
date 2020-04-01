@@ -4,9 +4,11 @@ Gene contains methods useful for the gene
 Haplotype contains methods for gene specific haplotypes
 """
 
-import csv
+import pandas as pd
+import sys
 
 from . import logging
+from .vcf import VarFile
 
 class Gene:
     """
@@ -15,7 +17,8 @@ class Gene:
     and its haplotypes
     """
 
-    def __init__(self, translation_table, config):
+    def __init__(self, translation_table, config, vcf: VarFile):
+        self.matched = False
         self.haplotypes = {}
         self.gene = None
         self.accession = None
@@ -23,26 +26,23 @@ class Gene:
         self.config = config
         with open(translation_table, 'rt') as trans_file:
             self.version = trans_file.readline().strip("#version=\n\t")
-            haplotype_file_lines = csv.DictReader(trans_file, delimiter="\t")
-            for hap_line in haplotype_file_lines:
-                self.gene = hap_line["Gene"]
-                try:
-                    if self.haplotypes[
-                        hap_line["Haplotype Name"]
-                        ].add_var(hap_line):
-                        self.ref = hap_line["Haplotype Name"]
-                    else:
-                        self.accession = hap_line["ReferenceSequence"]
-                except KeyError:
-                    self.haplotypes[
-                        hap_line["Haplotype Name"]
-                        ] = Haplotype()
-                    if self.haplotypes[
-                        hap_line["Haplotype Name"]
-                        ].add_var(hap_line):
-                        self.ref = hap_line["Haplotype Name"]
-                    else:
-                        self.accession = hap_line["ReferenceSequence"]
+        self.translation_table = pd.read_csv(
+            translation_table, 
+            skipinitialspace = True,
+            delimiter = "\t", 
+            skiprows = 1,
+            na_values= {4: ".", 5: "."},
+            dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype()})
+        self.gene = self.translation_table.iloc[-1, 1]
+        self.translation_table.iloc[:,0] = self.translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
+        self.accession = self.translation_table.iloc[-1, 3]
+        self.max = self.translation_table.iloc[:,5].dropna().max() + int(self.config.VARIANT_QUERY_PARAMETERS["5p_offset"])
+        self.min = self.translation_table.iloc[:,4].dropna().min() - int(self.config.VARIANT_QUERY_PARAMETERS["3p_offset"])
+        self.chromosome = self.config.CHROMOSOME_ACCESSIONS[self.accession]
+        self.variants = vcf.get_range(self.chromosome, self.min, self.max)
+        self.translation_table["ID"] = self.translation_table.apply(
+            lambda x: f"c{self.chromosome}_{x.iloc[4]}", 
+            axis = 1)
 
     def __str__(self):
         return self.gene
@@ -50,56 +50,4 @@ class Gene:
     def __repr__(self):
         return self.gene
 
-    def chromosome(self) -> int:
-        return int(self.config.CHROMOSOME_ACCESSIONS[
-            self.accession
-        ])
-
-    def position_min(self) -> int:
-        return min([hap.get_min() for name, hap in self.haplotypes.items()]) - int(self.config.VARIANT_QUERY_PARAMETERS["5p_offset"])
-
-    def position_max(self) -> int:
-        return max([hap.get_max() for name, hap in self.haplotypes.items()]) + int(self.config.VARIANT_QUERY_PARAMETERS["3p_offset"])
-
-
-class Haplotype:
-    """
-    Haplotype objects - sorts and stores characteristics of markers
-    This class is only instantiated from within the gene class
-    """
-
-    def __init__(self):
-        self.name = None
-        self.is_ref = False
-        self.ref_row = None
-        self.vars = []
-
-    def add_var(self, var_data: dict) -> bool:
-        """
-        Takes a row from the 
-        """
-        self.name = var_data["Haplotype Name"]
-        if var_data["ReferenceSequence"] == "REFERENCE":
-            self.is_ref = True
-            self.ref_row = var_data
-        else:
-            self.vars.append(var_data)
-        return self.is_ref
-
-    def get_min(self) -> int:
-        """Returns the minimum position needed for this haplotype"""
-        try:
-            return min(
-                [int(variant["Variant Start"]) for variant in self.vars]
-                )
-        except ValueError:
-            return 100000000
-
-    def get_max(self) -> int:
-        """Returns the maximum position needed for this haplotype"""
-        try:
-            return max(
-                [int(variant["Variant Stop"]) for variant in self.vars]
-                )
-        except ValueError:
-            return 0
+                

@@ -82,49 +82,4 @@ class ConfigData:
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
 
-        # Look for bam genes in config, otherwise set to empty
-        try: 
-            self.BAM_GENES = self.config["BAM GENES"]["bam_file_genes"].split(",")
-        except KeyError:
-            logging.info(
-                "No genes included in bam genes."
-            )
-            self.BAM_GENES = []
-
-        if self.update_config:
-            with open(config_path, "w") as configfile:
-                self.config.write(configfile)
-
-
-        ## All following factors DO NOT write to the config.ini that is set by this file. If you need to know how to format those
-        ## See the default config file in the repository. 
-
-        # Get maximum pileup depth
-        try: 
-            self.MAX_PILEUP_DEPTH = int(self.config["BAM GENES"]["max_pileup_depth"])
-            self.CALL_THRESHOLD = float(self.config["BAM GENES"]["call_threshold"])
-            self.MIN_READS = int(self.config["BAM GENES"]["min_reads"])
-            self.MIN_Q = int(self.config["BAM GENES"]["min_q"])
-            self.MIN_MAPQ = int(self.config["BAM GENES"]["min_mapq"])
-        except KeyError:
-            logging.info(
-                "Missing one or more variant calling parameters, setting all to default."
-            )
-            self.MAX_PILEUP_DEPTH = 8000
-            self.CALL_THRESHOLD = 0.2
-            self.MIN_READS = 30
-            self.MIN_Q = 30
-            self.MIN_MAPQ = 30
-
-        # Look for CNV information in config. Does not write a default. 
-
-        try:
-            self.CNV_REGIONS = {name: tuple(data.split(",")) for name, data in self.config["CNV REGIONS"].items()}
-        except KeyError:
-            self.CNV_REGIONS = None
-
-        try:
-            self.CNV_PENALTY = int(self.config["CNV PARAMETERS"]["penalty"])
-        except KeyError:
-            self.CNV_PENALTY = 5
     

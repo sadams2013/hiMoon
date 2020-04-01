@@ -8,3 +8,14 @@ translations/
 *.png
 scripts/
 .DS_Store
+dist/
+build/
+hiMoon.egg-info/
+
+*.bcf
+*.csi
+*.vcf
+*.tsv
+*.tbi
+*.bam
+*.bai
