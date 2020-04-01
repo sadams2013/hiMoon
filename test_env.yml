@@ -4,12 +4,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - glpk=4.65=h65ac59c_1002
-  - numpy=1.18.1=py37h7241aed_0
-  - pandas=1.0.3=py37h6c726b0_0
-  - pulp=1.6.8=py37_1000
-  - pysam=0.15.3=py37h726f235_1
-  - pytest=5.4.1=py37_0
+  - glpk
+  - numpy
+  - pandas
+  - pulp
+  - pysam
+  - pytest
 
 prefix: ~/himoon
 
