@@ -81,5 +81,11 @@ class ConfigData:
                 "3p_offset": 1000
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
+        
+        if self.update_config:	
+            with open(config_path, "w") as configfile:	
+                self.config.write(configfile)
+    
+
 
     
