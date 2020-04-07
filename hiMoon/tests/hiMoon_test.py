@@ -9,7 +9,7 @@ CONFIG = config.ConfigData("hiMoon/tests/config.ini")
 VCF = vcf.VarFile("hiMoon/tests/NA12878_chr22.bcf")
 CYP2D6_TABLE = "hiMoon/tests/CYP2D6.NC_000022.11.haplotypes.tsv"
 GENE = gene.Gene(CYP2D6_TABLE, config = CONFIG, vcf = VCF)
-SUBJ = subject.Subject("NA12878",genes = [GENE])
+SUBJ = subject.Subject("NA12878", genes = [GENE])
 
 class TestGene(unittest.TestCase):
 
