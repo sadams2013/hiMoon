@@ -1,14 +1,14 @@
-name: himoon	
-channels:	
-  - bioconda	
-  - conda-forge	
-  - defaults	
-dependencies:	
-  - glpk	
-  - numpy	
-  - pandas	
-  - pulp	
-  - pysam	
-  - pytest	
+name: himoon
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - glpk
+  - numpy
+  - pandas
+  - pulp
+  - pysam
+  - pytest
 
 prefix: ~/himoon
