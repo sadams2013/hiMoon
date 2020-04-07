@@ -22,7 +22,6 @@ setup(
     package_data={"hiMoon.tests": ["*"]},
     entry_points={"console_scripts": ["hiMoon = hiMoon.__main__:main"]},
     install_requires=[
-        "glpk",
         "pulp",
         "pandas",
         "pysam"
