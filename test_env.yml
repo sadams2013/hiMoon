@@ -1,4 +1,4 @@
-name: himoon
+name: himoontest
 channels:
   - conda-forge
   - bioconda
