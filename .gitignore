@@ -23,3 +23,6 @@ hiMoon.egg-info/
 !NA12878_chr22.bcf
 !NA12878_chr22.bcf.csi
 !CYP2D6.NC_000022.11.haplotypes.tsv
+
+.vscode
+.pytest_cache

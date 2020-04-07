@@ -3,13 +3,13 @@ import csv
 
 import pandas as pd
 
-from hiMoon import gene, vcf, subject, config
+from hiMoon import gene, vcf, subject, config, himoon
 
 CONFIG = config.ConfigData("hiMoon/tests/config.ini")
 VCF = vcf.VarFile("hiMoon/tests/NA12878_chr22.bcf")
 CYP2D6_TABLE = "hiMoon/tests/CYP2D6.NC_000022.11.haplotypes.tsv"
 GENE = gene.Gene(CYP2D6_TABLE, config = CONFIG, vcf = VCF)
-SUBJ = subject.Subject("NA12878",genes = [GENE], config = CONFIG)
+SUBJ = subject.Subject("NA12878",genes = [GENE])
 
 class TestGene(unittest.TestCase):
 
@@ -27,12 +27,24 @@ class TestGene(unittest.TestCase):
 class TestSubject(unittest.TestCase):
 
     def test_subject_prefix(self):
-        assert SUBJ.prefix == "NA12878"
+        self.assertEqual(SUBJ.prefix, "NA12878")
     
     def test_called_haplotypes(self):
-        assert SUBJ.called_haplotypes["CYP2D6"][1] == [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)]
+        self.assertEqual(SUBJ.called_haplotypes["CYP2D6"][1], [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)])
 
 class TestVCF(unittest.TestCase):
 
     def test_samples(self):
-        assert VCF.samples[0] == "NA12878"
+        self.assertEqual(VCF.samples[0], "NA12878")
+
+class TestHiMoon(unittest.TestCase):
+
+    def test_himoon(self):
+        haps = himoon.get_haps(
+            "hiMoon/tests/CYP2D6.NC_000022.11.haplotypes.tsv",
+            "hiMoon/tests/NA12878_chr22.bcf",
+            "NA12878",
+            "hiMoon/tests/config.ini"
+        )
+        self.assertEqual(haps[1], [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)])
+
