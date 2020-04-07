@@ -9,7 +9,7 @@ from .gene import Gene
 
 class Haplotype:
 
-    def __init__(self, gene: Gene, genotypes: dict) -> None:
+    def __init__(self, gene: Gene, sample_prefix: str) -> None:
         """Subject level haplotypes for a given gene
         
         Args:
@@ -19,7 +19,22 @@ class Haplotype:
         self.translation_table = gene.translation_table
         self.chromosome = gene.chromosome
         self.version = gene.version
-        self.genotypes = genotypes
+        self.sample_prefix = sample_prefix
+        self.genotypes = self._get_vars(gene)
+    
+    def _get_vars(self, gene) -> dict:
+        """The Gene object has the parsed VCF with all samples. This gets the variants for just this subject.
+        
+        Returns:
+            dict: dictionary of variants for this subject
+        """
+        genotypes = {}
+        for var_id, sub_vars in gene.variants.items():
+            try:
+                genotypes[var_id] = sub_vars[self.sample_prefix]
+            except KeyError:
+                pass
+        return genotypes
 
     def table_matcher(self) -> None:
         """Matches translation table with the subject's genotypes

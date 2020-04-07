@@ -9,14 +9,18 @@ from . import logging
 
 
 class VarFile:
-    def __init__(self, vcf_file: str) -> None:
+    def __init__(self, vcf_file: str, sample: str = None) -> None:
         """VarFile object, basically a wrapper for pysam VariantFile
         
         Args:
             vcf_file (str): path to VCF/VCF.GZ/BCF file (needs to be indexed)
         """
         self.vcf_file = VariantFile(vcf_file)
-        self.samples = list(self.vcf_file.header.samples)
+        if sample:
+            self.samples = [sample]
+        else:
+            self.samples = list(self.vcf_file.header.samples)
+        self.vcf_file.subset_samples(self.samples)
     
     def get_range(self, chrom: str, minloc: int, maxloc: int) -> dict:
         """Returns a range of variants for all samples in a VCF file

@@ -30,6 +30,9 @@ def main():
     parser.add_argument("-i", "--loglevel-info",
                         help="Use more verbose logging output (useful for debugging).",
                         action="store_true")
+    parser.add_argument("-s", "--sample",
+                        help="Single sample from multisample ID (if not specified, will do all)",
+                        default=None)
     
     args = vars(parser.parse_args())
 
@@ -47,7 +50,7 @@ def haplotyper(args: dict):
     config = ConfigData(args["config_file"])
     genes = []
     subjects = []
-    vcf = VarFile(args["vcffile"])
+    vcf = VarFile(args["vcffile"], args["sample"])
 
     # Test if single translation table argued, or directory of files. 
     if args["translation_tables"][-3:] == "tsv":
@@ -55,7 +58,7 @@ def haplotyper(args: dict):
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
             genes.append(Gene(os.path.abspath(translation_table), config))
-    subjects = [Subject(prefix = sub_id, genes = genes, config = config) for sub_id in vcf.samples]
+    subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_report(out_dir, subjects, args["vcffile"].split("/")[-1])
 
