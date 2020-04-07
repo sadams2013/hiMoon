@@ -4,7 +4,7 @@ base = None
 
 setup(
     name="hiMoon",
-    version="0.01",
+    version="0.02",
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -15,11 +15,17 @@ setup(
         "Intended Audience :: Science/Research",
         "Intended Audience :: Healthcare Industry"
     ],
-    description="Pharmacogenomics Haplotype and Structural Variation Caller",
+    description="Match NGS data with defined haplotypes",
     author="Solomon M. Adams, PharmD, PhD",
     author_email="sadams07@su.edu",
     packages=find_packages(),
     package_data={"hiMoon.tests": ["*"]},
     entry_points={"console_scripts": ["hiMoon = hiMoon.__main__:main"]},
+    install_requires=[
+        "glpk",
+        "pulp",
+        "pandas",
+        "pysam"
+    ]
 )
 
