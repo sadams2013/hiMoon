@@ -1,6 +1,6 @@
 # hiMoon: Determine Pharmacogenomics Alleles and Structural Variation
 
-[![Build Status](https://travis-ci.org/sadams2013/hiMoon.svg?branch=master)](https://travis-ci.org/sadams2013/hiMoon)
+![himoon_hap](https://github.com/Ariel-Precision-Medicine/himoon_hap/workflows/himoon_hap/badge.svg)
 
 ## Disclaimer and Status
 
