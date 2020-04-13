@@ -18,7 +18,9 @@ class Subject:
         for gene in genes:
             haplotype = Haplotype(gene, self.prefix)
             haplotype.table_matcher()
-            self.called_haplotypes[str(gene)] = haplotype.optimize_hap()
+            self.called_haplotypes[str(gene)] = {
+                "HAPS": haplotype.optimize_hap(),
+                "CONTIG": gene.chromosome}
     
     def __str__(self):
         return self.prefix

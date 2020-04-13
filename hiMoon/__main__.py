@@ -58,16 +58,17 @@ def haplotyper(args: dict):
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
             genes.append(Gene(os.path.abspath(translation_table), config))
+    contigs = [g.chromosome for g in genes]
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_report(out_dir, subjects, args["vcffile"].split("/")[-1])
 
 
-def write_report(directory: str, subject: [Subject], prefix):
+def write_report(directory: str, subjects: [Subject], prefix):
     """
     """
     rows = []
-    for subj in subject:
+    for subj in subjects:
         for gene, data in subj.called_haplotypes.items():
             rows.append(
                 {

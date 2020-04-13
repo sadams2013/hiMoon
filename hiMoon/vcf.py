@@ -5,6 +5,8 @@ File must be bgzipped and tabixed
 
 from pysam import VariantFile
 
+from .template import PATH
+
 from . import logging
 
 
@@ -44,3 +46,60 @@ class VarFile:
                 sample: {
                     "alleles": tuple(position.samples[sample].alleles), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
         return positions_out
+
+def get_alleles(gene, subjects):
+    ref = gene.reference
+    alts = []
+    for s in subjects:
+        subject_haps = [h[0] for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
+        alts += subject_haps
+    try:
+        alts.remove(ref)
+    except ValueError:
+        pass
+    return([ref] + list(set(alts)))
+
+def get_dosage(haps, alleles):
+    sub_alleles = []
+    for h in haps:
+        sub_alleles += [h[0]] * int(h[1])
+    return [alleles.index(s) for s in sub_alleles]
+
+
+def get_samples(gene_name, subjects, alleles):
+    formats = []
+    for s in subjects:
+        formats.append(
+            {
+                "GT": get_dosage(s.called_haplotypes[gene_name]["HAPS"][1], alleles),
+                "AS": 1, 
+                "VA": s.called_haplotypes[gene_name]["HAPS"][2]
+            }
+        )
+    return formats
+
+
+def write_variant_file(directory: str, subjects: [], prefix, genes):
+    contigs = list(set([f"chr{gene.chromosome.strip('chr')}" for gene in genes]))
+    template = VariantFile(PATH + "/template.vcf", "r")
+    outfile = VariantFile(directory+f"/{prefix}.haplotypes.vcf", "w", header = template.header)
+    for contig in contigs:
+        outfile.header.add_line(f"##contig=<ID={contig},length=0>")
+    for sub in subjects:
+        outfile.header.add_sample(str(sub))
+    records = {}
+    for gene in genes:
+        alleles = get_alleles(gene, subjects)
+        nr =outfile.new_record(
+            contig = f"chr{gene.chromosome}",
+            start = 1, #TODO
+            stop = 2, #TODO
+            alleles = [a.strip(str(gene)).replace("(star)", "*") for a in alleles],
+            id = f"{str(gene)}_pgx",
+            qual = None, #TODO
+            filter = None, #TODO
+            info = None, #TODO
+            samples = get_samples(str(gene), subjects, alleles)
+        )
+        outfile.write(nr)
+    outfile.close()

@@ -24,6 +24,7 @@ class Gene:
         self.max = self.translation_table.iloc[:,5].dropna().max() + int(config.VARIANT_QUERY_PARAMETERS["5p_offset"])
         self.min = self.translation_table.iloc[:,4].dropna().min() - int(config.VARIANT_QUERY_PARAMETERS["3p_offset"])
         self.variants = vcf.get_range(self.chromosome, self.min, self.max)
+        self.reference = "REF"
 
     def __str__(self):
         return self.gene

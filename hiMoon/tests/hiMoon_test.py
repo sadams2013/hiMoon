@@ -30,7 +30,7 @@ class TestSubject(unittest.TestCase):
         self.assertEqual(SUBJ.prefix, "NA12878")
     
     def test_called_haplotypes(self):
-        self.assertEqual(SUBJ.called_haplotypes["CYP2D6"][1], [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)])
+        self.assertEqual(SUBJ.called_haplotypes["CYP2D6"]["HAPS"][1], [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)])
 
 class TestVCF(unittest.TestCase):
 
@@ -47,4 +47,9 @@ class TestHiMoon(unittest.TestCase):
             "hiMoon/tests/config.ini"
         )
         self.assertEqual(haps[1], [("CYP2D6(star)3", 1.0), ("CYP2D6(star)4.001", 1.0)])
+
+class TestOut(unittest.TestCase):
+
+    def test_vcf_write(self):
+        a = vcf.write_variant_file("hiMoon/tests", subjects = [SUBJ], prefix = "test", genes = [GENE])
 
