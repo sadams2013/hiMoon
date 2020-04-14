@@ -61,29 +61,9 @@ def haplotyper(args: dict):
     contigs = [g.chromosome for g in genes]
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
-    write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1], genes)
+    write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
 
 
-def write_report(directory: str, subjects: [Subject], prefix):
-    """
-    """
-    rows = []
-    for subj in subjects:
-        for gene, data in subj.called_haplotypes.items():
-            rows.append(
-                {
-                    "PREFIX": subj.prefix,
-                    "GENE": gene,
-                    "VERSION": data[0],
-                    "CALLED": "/".join([str(hap) for hap in data[3]]),
-                    "MARKERS": ", ".join(data[2]),
-                }
-            )
-    with open(directory+f"/{prefix}.haplotypes.tsv", "w") as outfile:
-        fieldnames = ["PREFIX", "GENE", "VERSION", "CALLED", "MARKERS"]
-        outwriter = csv.DictWriter(outfile, delimiter="\t", fieldnames=fieldnames)
-        outwriter.writeheader()
-        outwriter.writerows(rows)
 
 
 if __name__ == "__main__": 
