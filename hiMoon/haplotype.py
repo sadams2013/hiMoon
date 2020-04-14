@@ -21,7 +21,7 @@ class Haplotype:
         self.version = gene.version
         self.sample_prefix = sample_prefix
         self.genotypes = self._get_vars(gene)
-        self.ref = gene.reference
+        self.reference = gene.reference
     
     def _get_vars(self, gene) -> dict:
         """The Gene object has the parsed VCF with all samples. This gets the variants for just this subject.
