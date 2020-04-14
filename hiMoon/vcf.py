@@ -51,7 +51,7 @@ def get_alleles(gene, subjects):
     ref = gene.reference
     alts = []
     for s in subjects:
-        subject_haps = [h[0] for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
+        subject_haps = [h for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
         alts += subject_haps
     try:
         alts.remove(ref)
@@ -60,10 +60,7 @@ def get_alleles(gene, subjects):
     return([ref] + list(set(alts)))
 
 def get_dosage(haps, alleles):
-    sub_alleles = []
-    for h in haps:
-        sub_alleles += [h[0]] * int(h[1])
-    return [alleles.index(s) for s in sub_alleles]
+    return [alleles.index(s) for s in haps]
 
 
 def get_samples(gene_name, subjects, alleles):
@@ -92,13 +89,13 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
         alleles = get_alleles(gene, subjects)
         nr =outfile.new_record(
             contig = f"chr{gene.chromosome}",
-            start = 1, #TODO
-            stop = 2, #TODO
-            alleles = [a.strip(str(gene)).replace("(star)", "*") for a in alleles],
+            start = gene.min,
+            stop = gene.max,
+            alleles = [f'<{a.strip(str(gene)).replace("(star)", "*")}>' for a in alleles],
             id = f"{str(gene)}_pgx",
-            qual = None, #TODO
-            filter = None, #TODO
-            info = None, #TODO
+            qual = None,
+            filter = None,
+            info = None,
             samples = get_samples(str(gene), subjects, alleles)
         )
         outfile.write(nr)

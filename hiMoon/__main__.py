@@ -7,7 +7,7 @@ import csv
 from .subject import Subject
 from .gene import Gene
 from .config import ConfigData
-from .vcf import VarFile
+from .vcf import VarFile, write_variant_file
 
 from . import logging
 
@@ -61,7 +61,7 @@ def haplotyper(args: dict):
     contigs = [g.chromosome for g in genes]
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
-    write_report(out_dir, subjects, args["vcffile"].split("/")[-1])
+    write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1], genes)
 
 
 def write_report(directory: str, subjects: [Subject], prefix):

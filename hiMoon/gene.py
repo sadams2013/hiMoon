@@ -19,12 +19,11 @@ class Gene:
         self.accession = None
         self.config = config
         self.version = self.get_version(translation_table)
-        self.translation_table, self.chromosome = self.read_translation_table(translation_table, config)
+        self.translation_table, self.chromosome, self.reference = self.read_translation_table(translation_table, config)
         self.gene = self.translation_table.iloc[-1, 1]
         self.max = self.translation_table.iloc[:,5].dropna().max() + int(config.VARIANT_QUERY_PARAMETERS["5p_offset"])
         self.min = self.translation_table.iloc[:,4].dropna().min() - int(config.VARIANT_QUERY_PARAMETERS["3p_offset"])
         self.variants = vcf.get_range(self.chromosome, self.min, self.max)
-        self.reference = "REF"
 
     def __str__(self):
         return self.gene
@@ -69,7 +68,11 @@ class Gene:
         accession = translation_table.iloc[-1, 3]
         chromosome = config.CHROMOSOME_ACCESSIONS[accession]
         translation_table["ID"] = translation_table.apply(lambda x: f"c{chromosome}_{x.iloc[4]}", axis = 1)
-        return translation_table, chromosome
+        try:
+            reference = translation_table[translation_table["ReferenceSequence"] == "REFERENCE"]["Haplotype Name"][0]
+        except IndexError:
+            reference = "REF"
+        return translation_table, chromosome, reference
 
 
 

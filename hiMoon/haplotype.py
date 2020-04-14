@@ -21,6 +21,7 @@ class Haplotype:
         self.version = gene.version
         self.sample_prefix = sample_prefix
         self.genotypes = self._get_vars(gene)
+        self.ref = gene.reference
     
     def _get_vars(self, gene) -> dict:
         """The Gene object has the parsed VCF with all samples. This gets the variants for just this subject.
@@ -157,13 +158,14 @@ class Haplotype:
             if v.varValue:
                 if v.varValue > 0:
                     if v.name.split("_")[0] == f'c{self.chromosome}':
-                        variants.append(f"{v.name}_{v.varValue}")
+                        variants.append(v.name)
                     else:
                         haps.append((v.name, v.varValue))
         if len(haps) == 0:
-            called = ["ref", "ref"]
+            called = [self.reference, self.reference]
         else:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
             if len(called) == 1:
-                called.append("ref")
-        return(self.version, haps, variants, called)
+                called.append(self.reference)
+        return self.version, called, variants
+        
