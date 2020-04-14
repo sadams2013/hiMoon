@@ -57,7 +57,7 @@ def haplotyper(args: dict):
         genes.append(Gene(os.path.abspath(args["translation_tables"]), config, vcf))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(Gene(os.path.abspath(translation_table), config))
+            genes.append(Gene(os.path.abspath(translation_table), config, vcf))
     contigs = [g.chromosome for g in genes]
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
