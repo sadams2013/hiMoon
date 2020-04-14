@@ -69,7 +69,6 @@ def get_samples(gene_name, subjects, alleles):
         formats.append(
             {
                 "GT": get_dosage(s.called_haplotypes[gene_name]["HAPS"][1], alleles),
-                "AS": 1, 
                 "VA": s.called_haplotypes[gene_name]["HAPS"][2]
             }
         )

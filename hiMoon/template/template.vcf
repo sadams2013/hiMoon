@@ -1,6 +1,5 @@
 ##fileformat=VCFv4.3
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=AS,Number=1,Type=Float,Description="Activity Score">
 ##FORMAT=<ID=VA,Number=.,Type=String,Description="Variants Included in Calls">
 ##FILTER=<ID=PASS,Description="All filters passed">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
