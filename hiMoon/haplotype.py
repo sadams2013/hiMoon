@@ -163,6 +163,8 @@ class Haplotype:
                         haps.append((v.name, v.varValue))
         if len(haps) == 0:
             called = [self.reference, self.reference]
+        elif len(haps) == 2:
+            called = [haps[0][0], haps[1][0]]
         else:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
             if len(called) == 1:
