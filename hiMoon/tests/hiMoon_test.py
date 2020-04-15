@@ -17,7 +17,7 @@ class TestGene(unittest.TestCase):
         assert GENE.gene == "CYP2D6"
     
     def test_translation_table_version(self):
-        assert gene.Gene.get_version(CYP2D6_TABLE) == "pharmvar-4.1.4"
+        assert gene.Gene.get_version(CYP2D6_TABLE) == "pharmvar-4.1.5"
     
     def test_translation_table_read(self):
         table = gene.Gene.read_translation_table(CYP2D6_TABLE, CONFIG)[0]
