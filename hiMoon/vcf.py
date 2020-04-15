@@ -90,7 +90,7 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
             contig = f"chr{gene.chromosome}",
             start = gene.min,
             stop = gene.max,
-            alleles = [f'<{a.strip(str(gene)).replace("(star)", "*")}>' for a in alleles],
+            alleles = [f'<{a.replace(str(gene), "").replace("(star)", "*")}>' for a in alleles],
             id = f"{str(gene)}_pgx",
             qual = None,
             filter = None,
