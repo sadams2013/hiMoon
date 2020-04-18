@@ -94,7 +94,7 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
             id = f"{str(gene)}_pgx",
             qual = None,
             filter = None,
-            info = None,
+            info = {"VARTYPE": "HAP"},
             samples = get_samples(str(gene), subjects, alleles)
         )
         outfile.write(nr)

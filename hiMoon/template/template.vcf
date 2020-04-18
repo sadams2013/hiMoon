@@ -1,4 +1,5 @@
 ##fileformat=VCFv4.3
+##INFO=<ID=VARTYPE,Number=1,Type=String,Description="Type of Variant">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=VA,Number=.,Type=String,Description="Variants Included in Calls">
 ##FILTER=<ID=PASS,Description="All filters passed">
