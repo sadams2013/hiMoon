@@ -10,5 +10,5 @@ def get_haps(translation_table_path, vcf_file_path, sample_id, config_path):
     gene = Gene(translation_table_path, config, vcf)
     haplotype = Haplotype(gene, sample_id)
     subject = Subject(sample_id, genes = [gene])
-    return subject.called_haplotypes, gene.translation_table, gene.variants[sample_id]
+    return subject.called_haplotypes, gene.translation_table, haplotype.genotypes
 
