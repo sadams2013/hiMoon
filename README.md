@@ -1,7 +1,6 @@
 # hiMoon: Determine Named Haplotypes
 
-![himoon_hap](https://github.com/Ariel-Precision-Medicine/himoon_hap/workflows/himoon_hap/badge.svg)
-
+![himoon_hap](https://github.com/sadams2013/hiMoon/workflows/himoon_hap/badge.svg)
 ## Disclaimer and Status
 
 Haplotype calling and structural variant estimation is highly dependent on the quality of data provided. 
