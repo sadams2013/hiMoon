@@ -22,6 +22,7 @@ class Haplotype:
         self.sample_prefix = sample_prefix
         self.genotypes = self._get_vars(gene)
         self.reference = gene.reference
+        self.iupac = gene.config.IUPAC_CODES
     
     def _get_vars(self, gene) -> dict:
         """The Gene object has the parsed VCF with all samples. This gets the variants for just this subject.
@@ -55,7 +56,7 @@ class Haplotype:
         self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
-    def _mod_alt(self, alt: str, ref: str) -> str:
+    def _mod_vcf_record(self, alt: str, ref: str) -> str:
         """Modifies alt from VCF to standardized form
         
         Args:
@@ -74,7 +75,7 @@ class Haplotype:
         else:
             return f's{alt}'
     
-    def _mod_ref(self, var_type: str, alt: str) -> str:
+    def _mod_tt_record(self, var_type: str, alt: str) -> str:
         """Modifies the translation table ref to a standardized form
         
         Args:
@@ -102,8 +103,8 @@ class Haplotype:
             genotype = genotypes[ID]
         except KeyError:
             return 99
-        geno = [self._mod_alt(g, genotype["ref"]) for g in genotype["alleles"]]
-        tt_alt = self._mod_ref(row.iloc[8], row.iloc[7])
+        geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
+        tt_alt = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = geno.count(tt_alt)
         return(alt_matches)
     
