@@ -54,7 +54,7 @@ def get_alleles(gene, subjects):
         subject_haps = [h for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
         alts += subject_haps
     try:
-        list(filter((ref).__ne__, alts))
+        alts = list(filter((ref).__ne__, alts))
     except ValueError:
         pass
     return([ref] + list(set(alts)))
