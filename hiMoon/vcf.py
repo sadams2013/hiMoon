@@ -58,7 +58,7 @@ def get_alleles(gene, subjects):
     except ValueError:
         pass
     if len(alts) == 0:
-        alts = ["NON-REF"]
+        alts = ["NON_REF"]
     return([ref] + list(set(alts)))
 
 def get_dosage(haps, alleles):
