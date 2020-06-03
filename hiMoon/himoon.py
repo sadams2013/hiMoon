@@ -17,5 +17,4 @@ def get_haps_from_variants(translation_table_path, vcf_data, sample_id, config_p
     gene = Gene(translation_table_path, config, variants = vcf_data)
     haplotype = Haplotype(gene, sample_id)
     subject = Subject(sample_id, genes = [gene])
-    return subject.called_haplotypes, gene.translation_table, haplotype.genotypes
-
+    return haplotype.optimize_hap()
