@@ -7,7 +7,7 @@ from .config import ConfigData
 
 class Gene:
 
-    def __init__(self, translation_table: str, config: ConfigData, vcf: VarFile) -> None:
+    def __init__(self, translation_table: str, config: ConfigData, vcf: VarFile = None, variants = None) -> None:
         """Create a Gene object
         
         Args:
@@ -23,7 +23,10 @@ class Gene:
         self.gene = self.translation_table.iloc[-1, 1]
         self.max = self.translation_table.iloc[:,5].dropna().max() + int(config.VARIANT_QUERY_PARAMETERS["5p_offset"])
         self.min = self.translation_table.iloc[:,4].dropna().min() - int(config.VARIANT_QUERY_PARAMETERS["3p_offset"])
-        self.variants = vcf.get_range(self.chromosome, self.min, self.max)
+        if vcf:
+            self.variants = vcf.get_range(self.chromosome, self.min, self.max)
+        else:
+            self.variants = variants
 
     def __str__(self):
         return self.gene
