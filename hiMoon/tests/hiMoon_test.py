@@ -40,7 +40,7 @@ class TestVCF(unittest.TestCase):
 class TestHiMoon(unittest.TestCase):
 
     def test_himoon(self):
-        haps = himoon.get_haps(
+        haps = himoon.get_haps_from_vcf(
             "hiMoon/tests/CYP2D6.NC_000022.11.haplotypes.tsv",
             "hiMoon/tests/NA12878_chr22.bcf",
             "NA12878",
