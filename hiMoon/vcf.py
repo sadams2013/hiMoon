@@ -54,9 +54,11 @@ def get_alleles(gene, subjects):
         subject_haps = [h for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
         alts += subject_haps
     try:
-        alts.remove(ref)
+        alts = list(filter((ref).__ne__, alts))
     except ValueError:
         pass
+    if len(alts) == 0:
+        alts = ["NON_REF"]
     return([ref] + list(set(alts)))
 
 def get_dosage(haps, alleles):
@@ -69,7 +71,6 @@ def get_samples(gene_name, subjects, alleles):
         formats.append(
             {
                 "GT": get_dosage(s.called_haplotypes[gene_name]["HAPS"][1], alleles),
-                "AS": 1, 
                 "VA": s.called_haplotypes[gene_name]["HAPS"][2]
             }
         )
@@ -91,11 +92,11 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
             contig = f"chr{gene.chromosome}",
             start = gene.min,
             stop = gene.max,
-            alleles = [f'<{a.strip(str(gene)).replace("(star)", "*")}>' for a in alleles],
+            alleles = [f'<{a.replace(str(gene), "").replace("(star)", "*")}>' for a in alleles],
             id = f"{str(gene)}_pgx",
             qual = None,
             filter = None,
-            info = None,
+            info = {"VARTYPE": "HAP"},
             samples = get_samples(str(gene), subjects, alleles)
         )
         outfile.write(nr)

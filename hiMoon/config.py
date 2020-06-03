@@ -63,7 +63,11 @@ class ConfigData:
                 'W': ['A', 'T'], 
                 'K': ['G', 'T'], 
                 'M': ['A', 'C'], 
-                'N': ['A', 'C', 'T', 'G']
+                'N': ['A', 'C', 'T', 'G'],
+                'A': ['A'],
+                'C': ['C'],
+                'T': ['T'],
+                'G': ['G']                
                 }
             self.config["IUPAC CODES"] = {
                 code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()

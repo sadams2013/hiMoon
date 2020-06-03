@@ -19,7 +19,7 @@ setup(
     author="Solomon M. Adams, PharmD, PhD",
     author_email="sadams07@su.edu",
     packages=find_packages(),
-    package_data={"hiMoon.tests": ["*"]},
+    package_data={"hiMoon.tests": ["*"], "": ["template*.vcf"]},
     entry_points={"console_scripts": ["hiMoon = hiMoon.__main__:main"]},
     install_requires=[
         "pulp",
