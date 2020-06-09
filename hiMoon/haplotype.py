@@ -16,6 +16,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             genotypes (dict): subject's genotypes
         """
+        self.matched = False
         self.translation_table = gene.translation_table
         self.chromosome = gene.chromosome
         self.version = gene.version
