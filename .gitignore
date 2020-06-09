@@ -27,3 +27,5 @@ hiMoon.egg-info/
 
 .vscode
 .pytest_cache
+
+env/

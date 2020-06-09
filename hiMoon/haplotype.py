@@ -151,7 +151,7 @@ class Haplotype:
                 self.translation_table.iloc[:,0] == self.haplotypes[i]
                 ]["MATCH"].sum() * haplotypes[i] for i in range(num_haps))
 
-        hap_prob.solve(GLPK(msg=0))
+        hap_prob.solve()
         haps = []
         variants = []
 

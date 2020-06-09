@@ -1,0 +1,15 @@
+attrs==19.3.0
+more-itertools==8.3.0
+numpy==1.18.5
+packaging==20.4
+pandas==1.0.4
+pluggy==0.13.1
+PuLP==2.1
+py==1.8.1
+pyparsing==2.4.7
+pysam==0.16.0
+pytest==5.4.3
+python-dateutil==2.8.1
+pytz==2020.1
+six==1.15.0
+wcwidth==0.2.4
