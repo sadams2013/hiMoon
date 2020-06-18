@@ -85,7 +85,6 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
         outfile.header.add_line(f"##contig=<ID={contig},length=0>")
     for sub in subjects:
         outfile.header.add_sample(str(sub))
-    records = {}
     for gene in genes:
         alleles = get_alleles(gene, subjects)
         nr =outfile.new_record(
