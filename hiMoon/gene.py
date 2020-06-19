@@ -62,13 +62,19 @@ class Gene:
         translation_table = pd.read_csv(
                                         translation_table, 
                                         skipinitialspace = True,
-                                        delimiter = "\t", 
-                                        skiprows = 1,
+                                        delim_whitespace=True,
+                                        skiprows = 2,
                                         na_values= {4: ".", 5: "."},
-                                        dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype()}
+                                        dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype()},
+                                        names = ["Haplotype Name", "Gene", 
+                                                "rsID", "ReferenceSequence",
+                                                "Variant Start", "Variant Stop",
+                                                "Reference Allele", "Variant Allele",
+                                                "Type"]
                                         )
         translation_table.iloc[:,0] = translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
         accession = translation_table.iloc[-1, 3]
+        print(translation_table)
         chromosome = config.CHROMOSOME_ACCESSIONS[accession]
         translation_table["ID"] = translation_table.apply(lambda x: f"c{chromosome}_{x.iloc[4]}", axis = 1)
         try:
