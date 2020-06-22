@@ -74,7 +74,6 @@ class Gene:
                                         )
         translation_table.iloc[:,0] = translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
         accession = translation_table.iloc[-1, 3]
-        print(translation_table)
         chromosome = config.CHROMOSOME_ACCESSIONS[accession]
         translation_table["ID"] = translation_table.apply(lambda x: f"c{chromosome}_{x.iloc[4]}", axis = 1)
         try:
