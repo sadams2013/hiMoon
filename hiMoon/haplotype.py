@@ -69,7 +69,9 @@ class Haplotype:
         """
         # if its a del, needs to return -s
         # if its an ins, needs to return just what is inserted
-        if len(ref) > len(alt):
+        if alt is None:
+            return "-"
+        elif len(ref) > len(alt):
             return "id-"
         elif len(ref) > 1:
             return f'id{alt[1:]}' # Remove first position
@@ -105,6 +107,8 @@ class Haplotype:
         except KeyError:
             return 99
         geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
+        if geno == ["-", "-"]:
+            return 99
         tt_alt = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = geno.count(tt_alt)
         return(alt_matches)
