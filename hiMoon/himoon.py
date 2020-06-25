@@ -4,7 +4,7 @@ from .config import ConfigData
 from .haplotype import Haplotype
 from .subject import Subject
 
-def get_haps_from_vcf(translation_table_path, vcf_file_path, sample_id, config_path):
+def get_haps_from_vcf(translation_table_path, vcf_file_path, sample_id, config_path = "config.ini"):
     vcf = VarFile(vcf_file_path, sample_id)
     config = ConfigData(config_path)
     gene = Gene(translation_table_path, config, vcf = vcf)
@@ -12,7 +12,7 @@ def get_haps_from_vcf(translation_table_path, vcf_file_path, sample_id, config_p
     haplotype.table_matcher()
     return haplotype.optimize_hap()
 
-def get_haps_from_variants(translation_table_path, vcf_data, sample_id, config_path):
+def get_haps_from_variants(translation_table_path, vcf_data, sample_id, config_path = "config.ini"):
     config = ConfigData(config_path)
     gene = Gene(translation_table_path, config, variants = vcf_data)
     haplotype = Haplotype(gene, sample_id)
