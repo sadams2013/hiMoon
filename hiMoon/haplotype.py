@@ -1,20 +1,23 @@
-import pandas as pd
-import numpy as np
 import sys
 
+import pandas as pd
+import numpy as np
+
 from pulp import *
-
 from .gene import Gene
-
 
 class Haplotype:
 
     def __init__(self, gene: Gene, sample_prefix: str) -> None:
-        """Subject level haplotypes for a given gene
-        
+        """
+        Create a new haplotype object
+        This object is not a subclass, but inherits data from the Gene class
+        Conceptually, Gene is a fairly abstract class that has meta information used
+        by the subject and haplotype classes. 
+
         Args:
             gene (Gene): gene.Gene object
-            genotypes (dict): subject's genotypes
+            sample_prefix (str): Sample ID 
         """
         self.matched = False
         self.translation_table = gene.translation_table
@@ -25,11 +28,15 @@ class Haplotype:
         self.reference = gene.reference
         self.iupac = gene.config.IUPAC_CODES
     
-    def _get_vars(self, gene) -> dict:
-        """The Gene object has the parsed VCF with all samples. This gets the variants for just this subject.
-        
+    def _get_vars(self, gene: Gene) -> dict:
+        """
+        Get variants for a particular gene and subject from the VCF data. 
+
+        Args:
+            gene ([type]): Gene object
+
         Returns:
-            dict: dictionary of variants for this subject
+            dict: genotypes for all subjects 
         """
         genotypes = {}
         for var_id, sub_vars in gene.variants.items():
@@ -40,7 +47,8 @@ class Haplotype:
         return genotypes
 
     def table_matcher(self) -> None:
-        """Matches translation table with the subject's genotypes
+        """
+        Matches variants in the translation table with the subject's variants
         """
         self.matched = True
         self.translation_table["MATCH"] = self.translation_table.apply(
@@ -58,14 +66,15 @@ class Haplotype:
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
-        """Modifies alt from VCF to standardized form
-        
+        """
+        Modifies a subject's variant record to match formatting in the translation table
+
         Args:
-            alt (str): alt allele
-            ref (str): ref allele
-        
+            alt (str): Subject haploid genotype (one allele at a given position)
+            ref (str): Reference allele for a position (from VCF)
+
         Returns:
-            str: reformatted alt allele
+            str: modified allele
         """
         # if its a del, needs to return -s
         # if its an ins, needs to return just what is inserted
@@ -79,14 +88,15 @@ class Haplotype:
             return f's{alt}'
     
     def _mod_tt_record(self, var_type: str, alt: str) -> str:
-        """Modifies the translation table ref to a standardized form
-        
+        """
+        Modifies translation table allele to common format
+
         Args:
-            var_type (str): insertion, deletion, or substitution
-            alt (str): allele from translation table
-        
+            var_type (str): substitution, insertion, deletion
+            alt (str): alt allele
+
         Returns:
-            [str]: modified allele 
+            str: modified allele
         """
         if var_type == "insertion":
             return f'id{alt}'
@@ -95,8 +105,17 @@ class Haplotype:
         else:
             return f's{alt}'
 
+    def _match(self, row: pd.core.series.Series, genotypes: [str]) -> int:
+        """
+        Evaluate match in a single translation table row with a sample
 
-    def _match(self, row, genotypes):
+        Args:
+            row (pd.core.series.Series): single row from translation table
+            genotypes ([type]): list of genotypes
+
+        Returns:
+            int: 99 (missing), 0, 1, or 2 (corresponds to the number of matched alleles for a particular position)
+        """
         if row.iloc[8] in ["insertion", "deletion"]:
             new_pos = int(row["ID"].split("_")[1]) - 1
             ID = f'{row["ID"].split("_")[0]}_{new_pos}'
@@ -113,12 +132,12 @@ class Haplotype:
         alt_matches = geno.count(tt_alt)
         return(alt_matches)
     
-    def optimize_hap(self):
+    def optimize_hap(self) -> ():
         """
-        Goal: Maximize the number of genotypes used
-        Constraints: 
-            1. Number of haplotypes == 2
-            2. ???
+        Solve for the most likely diplotype
+
+        Returns:
+            (): Results
         """
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
