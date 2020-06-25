@@ -1,25 +1,8 @@
 import configparser
+
 from . import logging
 
-class ConfigData:
-
-    def __init__(self, config_path):
-        self.update_config = False
-        # Initialize configparser
-        self.config = configparser.ConfigParser()
-
-        # Read config file
-        self.config.read(config_path)
-
-        try:
-            self.CHROMOSOME_ACCESSIONS = {
-                accession.upper(): chromosome for accession, chromosome in self.config["CHROMOSOME ACCESSIONS"].items()
-                }
-        except KeyError:
-            logging.warning("Chromosome accessions not found in config, defaulting to GRCh38.")
-            self.update_config = True
-            # Defaults to GRCh38
-            self.CHROMOSOME_ACCESSIONS = {
+GRCH38_ACCESSIONS = {
                 "NC_000001.11": "1",
                 "NC_000002.12": "2",
                 "NC_000003.12": "3",
@@ -45,18 +28,8 @@ class ConfigData:
                 "NC_000023.11": "23",
                 "NC_000024.10": "24"
             }
-            self.config["CHROMOSOME ACCESSIONS"] = self.CHROMOSOME_ACCESSIONS
 
-        # Get IUPAC codes from config, if not found - use default and update
-        try:
-            self.IUPAC_CODES = {
-                code.upper(): list(nucleotides) for code, nucleotides in self.config["IUPAC CODES"].items()
-                }
-        except KeyError:
-            self.update_config = True
-            logging.warning(
-                "IUPAC Codes not found in config file. Adding default values.")
-            self.IUPAC_CODES = {
+IUPAC_CODES = {
                 'R': ['A', 'G'], 
                 'Y': ['C', 'T'], 
                 'S': ['G', 'C'], 
@@ -68,28 +41,73 @@ class ConfigData:
                 'C': ['C'],
                 'T': ['T'],
                 'G': ['G']                
-                }
-            self.config["IUPAC CODES"] = {
-                code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()
-                }
+            }
 
+class ConfigData:
+
+    def __init__(self, config_path: str, write_config: bool = False) -> None:
+        """
+        Create a new config class that is used throughout to set various parameters
+
+        Args:
+            config_path (str): path to a configuration file - can be a "dummy" value. 
+            write_config (bool, optional): Write a new configuration file to config_path?. Defaults to False.
+        """
+        self.config = configparser.ConfigParser()
+        self.config.read(config_path)
+        self.chromosome_accessions()
+        self.iupac_codes()
+        self.variant_query_params()
+        if write_config:
+            self.write_config(config_path)
+    
+    def chromosome_accessions(self) -> None:
+        """
+        Set chromosome accessions
+        """
+        try:
+            self.CHROMOSOME_ACCESSIONS = {accession.upper(): chromosome for accession, chromosome in self.config["CHROMOSOME ACCESSIONS"].items()}
+        except KeyError:
+            logging.warning("Chromosome accessions defaulting to GRCh38")
+            self.CHROMOSOME_ACCESSIONS = GRCH38_ACCESSIONS
+            self.config["CHROMOSOME ACCESSIONS"] = self.CHROMOSOME_ACCESSIONS
+    
+    def iupac_codes(self) -> None:
+        """
+        Set IUPAC nucleotide codes
+        """
+        # Get IUPAC codes from config, if not found - use default and update
+        try:
+            self.IUPAC_CODES = {code.upper(): list(nucleotides) for code, nucleotides in self.config["IUPAC CODES"].items()}
+        except KeyError:
+            self.update_config = True
+            logging.warning("IUPAC Codes set to default values.")
+            self.IUPAC_CODES = IUPAC_CODES
+            self.config["IUPAC CODES"] = {code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()}
+    
+    def variant_query_params(self) -> None:
+        """
+        Set variant query parameters
+        """
         # Get variant query parameters, if not found - add defaults
         try:
             self.VARIANT_QUERY_PARAMETERS = self.config["VARIANT QUERY PARAMETERS"]
         except KeyError:
             self.update_config = True
-            logging.warning(
-                "Query parameters not found in config file. Adding default values.")
+            logging.warning("Using a 1kb 5' and 3' offset.")
             self.VARIANT_QUERY_PARAMETERS = {
                 "5p_offset": 1000,
                 "3p_offset": 1000
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
-        
-        if self.update_config:	
-            with open(config_path, "w") as configfile:	
-                self.config.write(configfile)
     
+    def write_config(self, config_path: str) -> None:
+        """
+        Write default/modified parameters to file at config_path
 
-
+        Args:
+            config_path (str): path to configuration file
+        """
+        with open(config_path, "w") as configfile:	
+            self.config.write(configfile)
     
