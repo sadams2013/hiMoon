@@ -20,8 +20,8 @@ hiMoon.egg-info/
 *.bam
 *.bai
 
-!NA12878_chr22.bcf
-!NA12878_chr22.bcf.csi
+!hiMoon/tests/test_files/*
+
 !CYP2D6.NC_000022.11.haplotypes.tsv
 !template.vcf
 
@@ -29,3 +29,5 @@ hiMoon.egg-info/
 .pytest_cache
 
 env/
+
+!remotes.tsv

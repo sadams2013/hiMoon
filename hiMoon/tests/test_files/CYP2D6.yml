@@ -1,0 +1,9 @@
+---
+GENE: CYP2D6
+TRANSLATION_TABLE: CYP2D6.NC_000022.11.haplotypes.tsv
+VCF: test_samples.bcf
+SAMPLES:
+- ID: NA12878
+  ALLELES:
+  - "CYP2D6(star)3"
+  - "CYP2D6(star)4"

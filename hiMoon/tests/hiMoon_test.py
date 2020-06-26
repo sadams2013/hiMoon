@@ -1,19 +1,22 @@
 import unittest
 import csv
+import os
 
 import pandas as pd
 
 from hiMoon import gene, vcf, subject, config, himoon
 
-VCF = vcf.VarFile("hiMoon/tests/test_files/NA12878_chr22.bcf")
-CYP2D6_TABLE = "hiMoon/tests/test_files/CYP2D6.NC_000022.11.haplotypes.tsv"
+PATH = os.path.dirname(os.path.abspath(__file__))
+
+VCF = vcf.VarFile(PATH + "/test_files/NA12878_chr22.bcf")
+CYP2D6_TABLE = PATH + "/test_files/CYP2D6.NC_000022.11.haplotypes.tsv"
 GENE = gene.Gene(CYP2D6_TABLE, config = config.ConfigData(), vcf = VCF)
 SUBJ = subject.Subject("NA12878", genes = [GENE])
 
 class TestConfig(unittest.TestCase):
 
     def test_load(self):
-        conf = config.ConfigData("hiMoon/tests/test_files/config.ini")
+        conf = config.ConfigData(PATH + "/test_files/config.ini")
         assert conf.CHROMOSOME_ACCESSIONS["TESTCHROM"] == "testvalue"
     
     def test_dummy_file(self):
@@ -51,8 +54,8 @@ class TestHiMoon(unittest.TestCase):
 
     def test_himoon(self):
         haps = himoon.get_haps_from_vcf(
-            "hiMoon/tests/test_files/CYP2D6.NC_000022.11.haplotypes.tsv",
-            "hiMoon/tests/test_files/NA12878_chr22.bcf",
+            PATH + "/test_files/CYP2D6.NC_000022.11.haplotypes.tsv",
+            PATH + "/test_files/NA12878_chr22.bcf",
             "NA12878"
         )
         HAPS = sorted([i.split(".")[0] for i in haps[1]])

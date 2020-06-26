@@ -11,13 +11,13 @@ from . import logging
 
 
 class VarFile:
-    def __init__(self, vcf_file: str, sample: str = None) -> None:
+    def __init__(self, vcf_file: str, sample: str = None, vcf_file_index: str = None) -> None:
         """VarFile object, basically a wrapper for pysam VariantFile
         
         Args:
             vcf_file (str): path to VCF/VCF.GZ/BCF file (needs to be indexed)
         """
-        self.vcf_file = VariantFile(vcf_file)
+        self.vcf_file = VariantFile(vcf_file, index_filename = vcf_file_index)
         if sample:
             self.samples = [sample]
         else:
