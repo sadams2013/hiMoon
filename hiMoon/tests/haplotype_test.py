@@ -1,7 +1,7 @@
-import unittest
 import yaml
 import glob
 import os
+from parameterized import parameterized
 
 from hiMoon import gene, vcf, subject, config, himoon
 
@@ -24,20 +24,21 @@ def load_definition_file(file_path: str) -> dict:
         except AttributeError: # Happens if libyaml headers are not available
             return(yaml.load(sample_allele_data, Loader = yaml.Loader))
 
-class TestGenes(unittest.TestCase):
+def prep_samples() -> []:
+    definition_files = glob.glob(PATH + "/test_files/*.yaml")
+    for definition_file in definition_files:
+        sample_alleles = load_definition_file(definition_file)
+        vcf_file = vcf.VarFile(PATH + "/test_files/" + sample_alleles["VCF"])
+        gene_obj = gene.Gene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], CONF, vcf = vcf_file)
+        gene_samples = [(subject.Subject(sample["ID"], genes = [gene_obj]), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
+        return(gene_samples)
 
-    def test_alleles(self):
-        definition_files = glob.glob(PATH + "/test_files/*.yml")
-        for definition_file in definition_files:
-            sample_alleles = load_definition_file(definition_file)
-            vcf_file = vcf.VarFile(PATH + "/test_files/" + sample_alleles["VCF"])
-            gene_obj = gene.Gene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], CONF, vcf = vcf_file)
-            for sample in sample_alleles["SAMPLES"]:
-                subj = subject.Subject(sample["ID"], genes = [gene_obj])
-                haps = sorted([i.split(".")[0] for i in subj.called_haplotypes[str(gene_obj)]["HAPS"][1]])
-                self.assertEqual(haps, sorted(sample["ALLELES"]), f"{sample['ID']} @ {str(gene)} should be {'/'.join(sample['ALLELES'])}. Found {'/'.join(haps)}")
+@parameterized.expand(prep_samples())
+def test_sample_haplotypes(subj, gene_obj, sample):
+    haps = sorted([i.split(".")[0] for i in subj.called_haplotypes[str(gene_obj)]["HAPS"][1]])
+    print(f"{sample['ID']} @ {str(gene_obj)} should be {'/'.join(sample['ALLELES'])}. Found {'/'.join(haps)}")
+    assert haps == sorted(sample["ALLELES"])
 
 
-
-
-# Test specific genotype calls
+if __name__ == "__main__":
+    test_sample_haplotypes()
