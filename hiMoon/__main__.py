@@ -10,23 +10,24 @@ from .vcf import VarFile, write_variant_file
 
 from . import LOGGING, CONFIG, set_config, set_logging_info
 
-def get_genes(args) -> [AbstractGene]:
+def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     """
-    Prepare gene list
+    Prep VCF and gene objects
 
     Args:
         args ([type]): args
 
     Returns:
-        [AbstractGene]: list of gene objects
+        Tuple
     """
+    vcf = VarFile(args["vcffile"], args["sample"])
     genes = []
     if args["translation_tables"][-3:] == "tsv":
         genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
             genes.append(AbstractGene(os.path.abspath(translation_table), vcf))
-    return(genes)
+    return genes, vcf
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -55,9 +56,8 @@ def main() -> None:
         set_logging_info()
     if args["config_file"]:
         set_config(args["config_file"])
-    genes = get_genes(args)
+    vcf, genes = get_vcf_genes(args)
     contigs = [g.chromosome for g in genes]
-    vcf = VarFile(args["vcffile"], args["sample"])
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
