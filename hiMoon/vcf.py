@@ -7,7 +7,7 @@ from pysam import VariantFile
 
 from .template import PATH
 
-from . import logging
+from . import LOGGING
 
 
 class VarFile:

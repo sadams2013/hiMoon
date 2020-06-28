@@ -5,14 +5,30 @@ import sys
 import csv
 
 from .subject import Subject
-from .gene import Gene
-from .config import ConfigData
+from .gene import AbstractGene
 from .vcf import VarFile, write_variant_file
 
-from . import logging
+from . import LOGGING, CONFIG, set_config, set_logging_info
 
+def get_genes(args) -> [AbstractGene]:
+    """
+    Prepare gene list
 
-def main():
+    Args:
+        args ([type]): args
+
+    Returns:
+        [AbstractGene]: list of gene objects
+    """
+    genes = []
+    if args["translation_tables"][-3:] == "tsv":
+        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf))
+    else:
+        for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
+            genes.append(AbstractGene(os.path.abspath(translation_table), vcf))
+    return(genes)
+
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Match haplotypes, return raw data and/or reports.", prog="hiMoon")
     parser.add_argument("-f", "--vcffile",
@@ -25,7 +41,7 @@ def main():
                         help="Directory for Output Files. \
                         If not specified, will output calls to stdout.")
     parser.add_argument("-c", "--config-file",
-                        default="config.ini",
+                        default=None,
                         help="path to config file.")
     parser.add_argument("-i", "--loglevel-info",
                         help="Use more verbose logging output (useful for debugging).",
@@ -35,36 +51,17 @@ def main():
                         default=None)
     
     args = vars(parser.parse_args())
-
-    # The log can get pretty verbose if translation tables are very long. 
     if args["loglevel_info"]:
-        logging.getLogger().setLevel(logging.INFO)
-
-    haplotyper(args)
-
-
-
-def haplotyper(args: dict):
-    """
-    """
-    config = ConfigData(args["config_file"])
-    genes = []
-    subjects = []
-    vcf = VarFile(args["vcffile"], args["sample"])
-
-    # Test if single translation table argued, or directory of files. 
-    if args["translation_tables"][-3:] == "tsv":
-        genes.append(Gene(os.path.abspath(args["translation_tables"]), config, vcf))
-    else:
-        for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(Gene(os.path.abspath(translation_table), config, vcf))
+        set_logging_info()
+    if args["config_file"]:
+        set_config(args["config_file"])
+    genes = get_genes(args)
     contigs = [g.chromosome for g in genes]
+    vcf = VarFile(args["vcffile"], args["sample"])
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
 
-
-
-
 if __name__ == "__main__": 
     main()
+    

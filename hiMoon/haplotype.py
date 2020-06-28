@@ -4,11 +4,11 @@ import pandas as pd
 import numpy as np
 
 from pulp import *
-from .gene import Gene
+from .gene import AbstractGene
 
 class Haplotype:
 
-    def __init__(self, gene: Gene, sample_prefix: str) -> None:
+    def __init__(self, gene: AbstractGene, sample_prefix: str) -> None:
         """
         Create a new haplotype object
         This object is not a subclass, but inherits data from the Gene class
@@ -20,31 +20,14 @@ class Haplotype:
             sample_prefix (str): Sample ID 
         """
         self.matched = False
-        self.translation_table = gene.translation_table
+        self.sample_prefix = sample_prefix
+        self.genotypes = gene.get_sample_vars(sample_prefix)
+
+        self.translation_table = gene.get_translation_table_copy()
         self.chromosome = gene.chromosome
         self.version = gene.version
-        self.sample_prefix = sample_prefix
-        self.genotypes = self._get_vars(gene)
         self.reference = gene.reference
-        self.iupac = gene.config.IUPAC_CODES
     
-    def _get_vars(self, gene: Gene) -> dict:
-        """
-        Get variants for a particular gene and subject from the VCF data. 
-
-        Args:
-            gene ([type]): Gene object
-
-        Returns:
-            dict: genotypes for all subjects 
-        """
-        genotypes = {}
-        for var_id, sub_vars in gene.variants.items():
-            try:
-                genotypes[var_id] = sub_vars[self.sample_prefix]
-            except KeyError:
-                pass
-        return genotypes
 
     def table_matcher(self) -> None:
         """

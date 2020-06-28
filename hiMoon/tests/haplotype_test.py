@@ -3,10 +3,9 @@ import glob
 import os
 from parameterized import parameterized
 
-from hiMoon import gene, vcf, subject, config, himoon
+from hiMoon import gene, vcf, subject, himoon
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-CONF = config.ConfigData()
 
 def load_definition_file(file_path: str) -> dict:
     """
@@ -29,7 +28,7 @@ def prep_samples() -> []:
     for definition_file in definition_files:
         sample_alleles = load_definition_file(definition_file)
         vcf_file = vcf.VarFile(PATH + "/test_files/" + sample_alleles["VCF"])
-        gene_obj = gene.Gene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], CONF, vcf = vcf_file)
+        gene_obj = gene.AbstractGene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], vcf = vcf_file)
         gene_samples = [(subject.Subject(sample["ID"], genes = [gene_obj]), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
         return(gene_samples)
 

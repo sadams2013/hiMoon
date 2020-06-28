@@ -1,12 +1,12 @@
 import sys
 
 from .haplotype import Haplotype
-from .gene import Gene
-from . import logging
+from .gene import AbstractGene
+from . import LOGGING
 
 class Subject:
 
-    def __init__(self, prefix: str, genes: [Gene]) -> None:
+    def __init__(self, prefix: str, genes: [AbstractGene]) -> None:
         """Subject object - manages data and functions for a single sample in a VCF file
         
         Args:

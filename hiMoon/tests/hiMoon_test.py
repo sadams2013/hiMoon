@@ -10,7 +10,7 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 
 VCF = vcf.VarFile(PATH + "/test_files/NA12878_chr22.bcf")
 CYP2D6_TABLE = PATH + "/test_files/CYP2D6.NC_000022.11.haplotypes.tsv"
-GENE = gene.Gene(CYP2D6_TABLE, config = config.ConfigData(), vcf = VCF)
+GENE = gene.AbstractGene(CYP2D6_TABLE, vcf = VCF)
 SUBJ = subject.Subject("NA12878", genes = [GENE])
 
 class TestConfig(unittest.TestCase):
@@ -29,12 +29,7 @@ class TestGene(unittest.TestCase):
         assert GENE.gene == "CYP2D6"
     
     def test_translation_table_version(self):
-        assert gene.Gene.get_version(CYP2D6_TABLE) == "pharmvar-4.1.6"
-    
-    def test_translation_table_read(self):
-        table = gene.Gene.read_translation_table(CYP2D6_TABLE, config.ConfigData())[0]
-        assert type(table) == pd.DataFrame
-
+        assert GENE.version == "pharmvar-4.1.6"
 
 class TestSubject(unittest.TestCase):
 

@@ -1,6 +1,6 @@
 import configparser
 
-from . import logging
+from . import LOGGING
 
 GRCH38_ACCESSIONS = {
                 "NC_000001.11": "1",
@@ -69,7 +69,7 @@ class ConfigData:
             self.CHROMOSOME_ACCESSIONS = {accession.upper(): chromosome for accession, chromosome in self.config["CHROMOSOME ACCESSIONS"].items()}
             print(self.CHROMOSOME_ACCESSIONS)
         except KeyError:
-            logging.info("Chromosome accessions defaulting to GRCh38")
+            LOGGING.info("Chromosome accessions defaulting to GRCh38")
             self.CHROMOSOME_ACCESSIONS = GRCH38_ACCESSIONS
             self.config["CHROMOSOME ACCESSIONS"] = self.CHROMOSOME_ACCESSIONS
     
@@ -82,7 +82,7 @@ class ConfigData:
             self.IUPAC_CODES = {code.upper(): list(nucleotides) for code, nucleotides in self.config["IUPAC CODES"].items()}
         except KeyError:
             self.update_config = True
-            logging.info("IUPAC Codes set to default values.")
+            LOGGING.info("IUPAC Codes set to default values.")
             self.IUPAC_CODES = IUPAC_CODES
             self.config["IUPAC CODES"] = {code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()}
     
@@ -95,7 +95,7 @@ class ConfigData:
             self.VARIANT_QUERY_PARAMETERS = self.config["VARIANT QUERY PARAMETERS"]
         except KeyError:
             self.update_config = True
-            logging.info("Using a 1kb 5' and 3' offset.")
+            LOGGING.info("Using a 1kb 5' and 3' offset.")
             self.VARIANT_QUERY_PARAMETERS = {
                 "5p_offset": 1000,
                 "3p_offset": 1000
