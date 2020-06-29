@@ -64,9 +64,9 @@ class AbstractGene:
     def _merge_tables(self, translation_table, cnv_table):
         new_rows = []
         cnv_table["BASE"] = cnv_table.apply(lambda x: x["Haplotype Name"].split("_")[0], axis = 1)
-        cnv_table["SUFFIX"] = cnv_table.apply(lambda x: x["Haplotype Name"].split("_")[1], axis = 1)
+        cnv_table["SUFFIX"] = cnv_table.apply(lambda x: x["Haplotype Name"].split("_")[-1], axis = 1)
         translation_table["BASE"] = translation_table.apply(lambda x: x["Haplotype Name"].split(".")[0], axis = 1)
-        translation_table["SUFFIX"] = translation_table.apply(lambda x: x["Haplotype Name"].split(".")[1], axis = 1)
+        translation_table["SUFFIX"] = translation_table.apply(lambda x: x["Haplotype Name"].split(".")[-1], axis = 1)
         for index, row in cnv_table.iterrows():
             trans_base = translation_table[translation_table["BASE"] == row["BASE"]]
             trans_suffixes = trans_base["SUFFIX"]
@@ -98,12 +98,9 @@ class AbstractGene:
                         "Type": r["Type"]
                     }
                 )
-
         new_table = translation_table.drop(["BASE", "SUFFIX"], axis = 1)
         added_rows = pd.DataFrame(new_rows)
-        return pd.concat([new_table, added_rows], ignore_index=True)
-
-        
+        return pd.concat([new_table, added_rows, cnv_table], ignore_index=True)
 
     def get_type(self, vtype):
         return 'CNV' if vtype == "CNV" else "SID"
@@ -147,7 +144,8 @@ class AbstractGene:
                                             "Reference Allele", "Variant Allele",
                                             "Type"]
             )
-        except:
+        except FileNotFoundError:
+            LOGGING.info("No CNV definition file found, proceeding with only SID variants.")
             cnv_table = None
         if cnv_table is not None:
             self.translation_table = self._merge_tables(self.translation_table, cnv_table)

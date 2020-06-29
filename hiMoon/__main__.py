@@ -27,7 +27,7 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
             genes.append(AbstractGene(os.path.abspath(translation_table), vcf))
-    return genes, vcf
+    return vcf, genes
 
 def main() -> None:
     parser = argparse.ArgumentParser(

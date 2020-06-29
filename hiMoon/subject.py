@@ -25,7 +25,7 @@ class Subject:
             except NoVariantsException:
                 LOGGING.warning(f"{self.prefix} has no variants, returning NA")
                 self.called_haplotypes[str(gene)] = {
-                    "HAPS": ("NA", "NA", "NA"),
+                    "HAPS": ("NA", "NA", "NA", "NA"),
                     "CONTIG": gene.chromosome}
 
     

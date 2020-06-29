@@ -49,7 +49,7 @@ class Haplotype:
         self.translation_table = self.translation_table.drop(self.translation_table.index[self.translation_table["MATCH"] == 99].tolist())
         no_match = self.translation_table[self.translation_table["MATCH"] == 0].iloc[:,0].unique() # Haplotypes where there is any variant not matching
         self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(no_match)] # Drop haplotypes that don't match 100%
-        self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH"]].drop_duplicates() # List of matched variants
+        self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
@@ -62,11 +62,11 @@ class Haplotype:
         Returns:
             str: reformatted alt allele
         """
-        ref = ref.strip("<>")
-        alt = alt.strip("<>")
+        if "<" in alt:
+            return f"s{alt.strip('<>')}"
         if alt is None:
             return "-"
-        elif len(ref) > len(alt) and alt not in ["DUP", "DEL"]:
+        elif len(ref) > len(alt):
             return "id-"
         elif len(ref) > 1:
             return f'id{alt[1:]}' # Remove first position
@@ -134,9 +134,12 @@ class Haplotype:
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
+        
+        svs = self.variants[self.variants["Type"] == "CNV"]
 
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
+        num_sv = svs.shape[0]
 
         hap_vars = []
 
@@ -150,13 +153,16 @@ class Haplotype:
         haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         
-
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= 2) # Cannot choose more than two haplotypes
 
+        # Any CNV variants defined, if matched with a haplotype, MUST be used
+        # Otherwise, variants like CYP2D6*5 will be missed by the other methods
+        hap_prob += (lpSum(variants[i] for i in range(num_vars) if self.variants.iloc[i, 2] == "CNV") == num_sv)
+
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
-            # A variant can only be used once per haplotype
+            # A variant allele can only be used once per haplotype, up to two alleles per variant
             hap_prob += (variants[i] <= (lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))))
             # A given variant cannot be used more than "MATCH"
             hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) <= self.variants.iloc[i,1] * variants[i])
@@ -186,5 +192,5 @@ class Haplotype:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
             if len(called) == 1:
                 called.append(self.reference)
-        return self.version, called, variants
+        return self.version, called, variants, self.translation_table
         

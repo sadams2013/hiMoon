@@ -1,0 +1,9 @@
+GENE: CYP2D6
+SAMPLES:
+- ALLELES:
+  - CYP2D6(star)4
+  - CYP2D6(star)5
+  ID: HG00276
+  NOTES: '*4/*5'
+TRANSLATION_TABLE: translation_tables/CYP2D6.NC_000022.10.haplotypes.tsv
+VCF: vcf/test_samples.GRCh37.SV_SID.bcf 
