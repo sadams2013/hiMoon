@@ -5,6 +5,7 @@ import numpy as np
 
 from pulp import *
 from .gene import AbstractGene
+from . import CONFIG
 
 class NoVariantsException(Exception):
     pass
@@ -32,7 +33,6 @@ class Haplotype:
         self.version = gene.version
         self.reference = gene.reference
     
-
     def table_matcher(self) -> None:
         """
         Matches variants in the translation table with the subject's variants
@@ -43,7 +43,7 @@ class Haplotype:
             axis = 1
         )
         self.translation_table["VAR_ID"] = self.translation_table.apply(
-                lambda x: f'{x["ID"]}_{x.iloc[7]}',
+                lambda x: f'{x["ID"]}_{str(x.iloc[7]).strip("<>")}',
                 axis = 1
                 )
         self.translation_table = self.translation_table.drop(self.translation_table.index[self.translation_table["MATCH"] == 99].tolist())
@@ -53,44 +53,46 @@ class Haplotype:
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
-        """
-        Modifies a subject's variant record to match formatting in the translation table
-
+        """Modifies record from VCF to standardized form
+        
         Args:
-            alt (str): Subject haploid genotype (one allele at a given position)
-            ref (str): Reference allele for a position (from VCF)
-
+            alt (str): alt allele
+            ref (str): ref allele
+        
         Returns:
-            str: modified allele
+            str: reformatted alt allele
         """
-        # if its a del, needs to return -s
-        # if its an ins, needs to return just what is inserted
+        ref = ref.strip("<>")
+        alt = alt.strip("<>")
         if alt is None:
             return "-"
-        elif len(ref) > len(alt):
+        elif len(ref) > len(alt) and alt not in ["DUP", "DEL"]:
             return "id-"
         elif len(ref) > 1:
             return f'id{alt[1:]}' # Remove first position
         else:
             return f's{alt}'
-    
-    def _mod_tt_record(self, var_type: str, alt: str) -> str:
-        """
-        Modifies translation table allele to common format
 
+    def _mod_tt_record(self, var_type: str, alt: str) -> list:
+        """Modifies the translation table ref to a standardized form
+        
         Args:
-            var_type (str): substitution, insertion, deletion
-            alt (str): alt allele
-
+            var_type (str): insertion, deletion, or substitution
+            alt (str): allele from translation table
+        
         Returns:
-            str: modified allele
+            [list]: modified allele as list based on iupac
         """
+        alt = alt.strip("<>")
         if var_type == "insertion":
-            return f'id{alt}'
+            return [f'id{alt}']
         elif var_type == "deletion":
-            return f'id-'
+            return [f'id-']
         else:
-            return f's{alt}'
+            try:
+                return [f's{a}' for a in CONFIG.IUPAC_CODES[alt]]
+            except KeyError:
+                return [f's{alt}']
 
     def _match(self, row: pd.core.series.Series, genotypes: [str]) -> int:
         """
@@ -105,18 +107,21 @@ class Haplotype:
         """
         if row.iloc[8] in ["insertion", "deletion"]:
             new_pos = int(row["ID"].split("_")[1]) - 1
-            ID = f'{row["ID"].split("_")[0]}_{new_pos}'
+            ID = f'{row["ID"].split("_")[0]}_{new_pos}_SID'
         else:
             ID = row["ID"]
         try:
             genotype = genotypes[ID]
         except KeyError:
             return 99
-        geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
-        if geno == ["-", "-"]:
+        try:
+            vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
+        except AttributeError:
+            return 99    
+        if vcf_geno == ["-", "-"]:
             return 99
-        tt_alt = self._mod_tt_record(row.iloc[8], row.iloc[7])
-        alt_matches = geno.count(tt_alt)
+        tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
+        alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         return(alt_matches)
     
     def optimize_hap(self) -> ():

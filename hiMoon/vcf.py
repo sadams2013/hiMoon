@@ -42,13 +42,14 @@ class VarFile:
             positions = self.vcf_file.fetch(f"chr{chrom}", minloc, maxloc)
         for position in positions:
             chrom = position.chrom.strip("chr")
-            positions_out[f"c{chrom}_{position.pos}"] = {
+            var_type = "SID"
+            try:
+                var_type = position.info["SVTYPE"]
+            except KeyError:
+                pass
+            positions_out[f"c{chrom}_{position.pos}_{var_type}"] = {
                 sample: {
-                    "alleles": 
-                        tuple(position.samples[sample].alleles), 
-                        "phased": position.samples[sample].phased, 
-                        "ref": position.ref
-                        } for sample in self.samples}
+                    "alleles": tuple(position.samples[sample].alleles), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
         return positions_out
 
 def get_alleles(gene, subjects):

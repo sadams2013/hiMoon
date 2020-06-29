@@ -51,14 +51,72 @@ class AbstractGene:
                 pass
         return sample_vars
     
-    def read_translation_table(self, translation_table: str) -> None:
+    def get_translation_table_copy(self) -> pd.DataFrame:
         """
-        Read and process a translation table, returns a data frame.
-        This is separated from the class instance such that each subject has
-        their own translation table instance that gets modified in haplotype. 
+        Get a deep copy of a translation table that can be modified
+        for a single subject
+
+        Returns:
+            pd.DataFrame: deep copy of the associated translation table
+        """
+        return(self.translation_table.copy(deep = True))
+    
+    def _merge_tables(self, translation_table, cnv_table):
+        new_rows = []
+        cnv_table["BASE"] = cnv_table.apply(lambda x: x["Haplotype Name"].split("_")[0], axis = 1)
+        cnv_table["SUFFIX"] = cnv_table.apply(lambda x: x["Haplotype Name"].split("_")[1], axis = 1)
+        translation_table["BASE"] = translation_table.apply(lambda x: x["Haplotype Name"].split(".")[0], axis = 1)
+        translation_table["SUFFIX"] = translation_table.apply(lambda x: x["Haplotype Name"].split(".")[1], axis = 1)
+        for index, row in cnv_table.iterrows():
+            trans_base = translation_table[translation_table["BASE"] == row["BASE"]]
+            trans_suffixes = trans_base["SUFFIX"]
+            for suf in trans_suffixes:
+                new_rows.append(
+                    {
+                        "Haplotype Name": f'{row["BASE"]}.{suf}_{row["SUFFIX"]}',
+                        "Gene": row["Gene"],
+                        "rsID": row["rsID"],
+                        "ReferenceSequence": row["ReferenceSequence"],
+                        "Variant Start": row["Variant Start"],
+                        "Variant Stop": row["Variant Stop"],
+                        "Reference Allele": row["Reference Allele"],
+                        "Variant Allele": row["Variant Allele"],
+                        "Type": row["Type"]
+                    }
+                )
+            for i, r in trans_base.iterrows():
+                new_rows.append(
+                    {
+                        "Haplotype Name": f'{row["BASE"]}.{r["SUFFIX"]}_{row["SUFFIX"]}',
+                        "Gene": r["Gene"],
+                        "rsID": r["rsID"],
+                        "ReferenceSequence": r["ReferenceSequence"],
+                        "Variant Start": r["Variant Start"],
+                        "Variant Stop": r["Variant Stop"],
+                        "Reference Allele": r["Reference Allele"],
+                        "Variant Allele": r["Variant Allele"],
+                        "Type": r["Type"]
+                    }
+                )
+
+        new_table = translation_table.drop(["BASE", "SUFFIX"], axis = 1)
+        added_rows = pd.DataFrame(new_rows)
+        return pd.concat([new_table, added_rows], ignore_index=True)
+
+        
+
+    def get_type(self, vtype):
+        return 'CNV' if vtype == "CNV" else "SID"
+
+    def read_translation_table(self, translation_table: str) -> pd.DataFrame:
+        """Read and process a translation table
         
         Args:
             translation_table (str): path to translation table file
+            config (ConfigData): config.Config object
+        
+        Returns:
+            pd.DataFrame: translation table as pandas data frame
         """
         with open(translation_table, 'rt') as trans_file:
             self.version = trans_file.readline().strip("#version=\n\t")
@@ -74,7 +132,25 @@ class AbstractGene:
                                                 "Variant Start", "Variant Stop",
                                                 "Reference Allele", "Variant Allele",
                                                 "Type"]
-                                        )
+        )
+        try:
+            cnv_table = pd.read_csv(
+                                    translation_table.replace(".tsv", ".cnv"),
+                                    skipinitialspace = True,
+                                    delim_whitespace=True,
+                                    skiprows = 2,
+                                    na_values= {4: ".", 5: "."},
+                                    dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype()},
+                                    names = ["Haplotype Name", "Gene", 
+                                            "rsID", "ReferenceSequence",
+                                            "Variant Start", "Variant Stop",
+                                            "Reference Allele", "Variant Allele",
+                                            "Type"]
+            )
+        except:
+            cnv_table = None
+        if cnv_table is not None:
+            self.translation_table = self._merge_tables(self.translation_table, cnv_table)
         self.translation_table.iloc[:,0] = self.translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
         try:
             self.reference = self.translation_table[self.translation_table["rsID"] == "REFERENCE"]["Haplotype Name"][0]
@@ -83,15 +159,5 @@ class AbstractGene:
         self.translation_table = self.translation_table[self.translation_table["ReferenceSequence"] != "."]
         self.accession = self.translation_table.iloc[-1, 3]
         self.chromosome = CONFIG.CHROMOSOME_ACCESSIONS[self.accession]
-        self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x.iloc[4]}", axis = 1)
-        
-    
-    def get_translation_table_copy(self) -> pd.DataFrame:
-        """
-        Get a deep copy of a translation table that can be modified
-        for a single subject
+        self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
 
-        Returns:
-            pd.DataFrame: deep copy of the associated translation table
-        """
-        return(self.translation_table.copy(deep = True))
