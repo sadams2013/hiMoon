@@ -75,5 +75,5 @@ SAMPLES:
   - CYP2D6(star)35
   ID: NA12003
   NOTES: '*4/*35'
-TRANSLATION_TABLE: CYP2D6.NC_000022.11.haplotypes.tsv
-VCF: test_samples.bcf
+TRANSLATION_TABLE: translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv
+VCF: vcf/test_samples.bcf

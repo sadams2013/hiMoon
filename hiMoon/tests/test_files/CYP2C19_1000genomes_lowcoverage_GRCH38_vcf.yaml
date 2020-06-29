@@ -6,5 +6,5 @@ SAMPLES:
   ID: NA12003
   NOTES: '*1/*2'
 
-TRANSLATION_TABLE: CYP2C19.NC_000010.11.haplotypes.tsv
-VCF: test_samples.bcf
+TRANSLATION_TABLE: translation_tables/CYP2C19.NC_000010.11.haplotypes.tsv
+VCF: vcf/test_samples.bcf
