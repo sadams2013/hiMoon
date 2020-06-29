@@ -2,6 +2,10 @@ import configparser
 
 from . import LOGGING
 
+BASE_ACCESSION = {
+    ".": "NA"
+}
+
 GRCH38_ACCESSIONS = {
                 "NC_000001.11": "1",
                 "NC_000002.12": "2",
@@ -67,11 +71,11 @@ class ConfigData:
         """
         try:
             self.CHROMOSOME_ACCESSIONS = {accession.upper(): chromosome for accession, chromosome in self.config["CHROMOSOME ACCESSIONS"].items()}
-            print(self.CHROMOSOME_ACCESSIONS)
         except KeyError:
             LOGGING.info("Chromosome accessions defaulting to GRCh38")
             self.CHROMOSOME_ACCESSIONS = GRCH38_ACCESSIONS
             self.config["CHROMOSOME ACCESSIONS"] = self.CHROMOSOME_ACCESSIONS
+        self.CHROMOSOME_ACCESSIONS = {**self.CHROMOSOME_ACCESSIONS, **BASE_ACCESSION}
     
     def iupac_codes(self) -> None:
         """

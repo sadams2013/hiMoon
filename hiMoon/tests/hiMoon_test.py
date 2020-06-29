@@ -30,6 +30,9 @@ class TestGene(unittest.TestCase):
     
     def test_translation_table_version(self):
         assert GENE.version == "pharmvar-4.1.6"
+    
+    def test_reference(self):
+        assert GENE.reference == "CYP2D6(star)1"
 
 class TestSubject(unittest.TestCase):
 

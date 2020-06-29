@@ -1,0 +1,79 @@
+GENE: CYP2D6
+SAMPLES:
+- ALLELES:
+  - CYP2D6(star)3
+  - CYP2D6(star)3
+  ID: HG00111
+  NOTES: '*3/*3'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)106
+  ID: HG01108
+  NOTES: '*2/*106'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)2
+  ID: HG00373
+  NOTES: '*2/*2'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)113
+  ID: HG03619
+  NOTES: '*2/*113'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)7
+  ID: HG03643
+  NOTES: '*2/*7'
+- ALLELES:
+  - CYP2D6(star)1
+  - CYP2D6(star)99
+  ID: HG03703
+  NOTES: '*1/*99'
+- ALLELES:
+  - CYP2D6(star)1
+  - CYP2D6(star)112
+  ID: HG03780
+  NOTES: '*1/*112'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)99
+  ID: HG03781
+  NOTES: '*2/*99'
+- ALLELES:
+  - CYP2D6(star)1
+  - CYP2D6(star)112
+  ID: HG03882
+  NOTES: '*1/*112'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)113
+  ID: HG04206
+  NOTES: '*2/*113'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)4
+  ID: NA07056
+  NOTES: '*2/*4'
+- ALLELES:
+  - CYP2D6(star)1
+  - CYP2D6(star)6
+  ID: NA07357
+  NOTES: '*1/*6'
+- ALLELES:
+  - CYP2D6(star)9
+  - CYP2D6(star)9
+  ID: NA06989
+  NOTES: '*9/*9'
+- ALLELES:
+  - CYP2D6(star)2
+  - CYP2D6(star)3
+  ID: NA11881
+  NOTES: '*2/*3'
+- ALLELES:
+  - CYP2D6(star)4
+  - CYP2D6(star)35
+  ID: NA12003
+  NOTES: '*4/*35'
+TRANSLATION_TABLE: CYP2D6.NC_000022.11.haplotypes.tsv
+VCF: test_samples.bcf

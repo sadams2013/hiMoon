@@ -24,13 +24,14 @@ def load_definition_file(file_path: str) -> dict:
             return(yaml.load(sample_allele_data, Loader = yaml.Loader))
 
 def prep_samples() -> []:
+    gene_samples = []
     definition_files = glob.glob(PATH + "/test_files/*.yaml")
     for definition_file in definition_files:
         sample_alleles = load_definition_file(definition_file)
         vcf_file = vcf.VarFile(PATH + "/test_files/" + sample_alleles["VCF"])
         gene_obj = gene.AbstractGene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], vcf = vcf_file)
-        gene_samples = [(subject.Subject(sample["ID"], genes = [gene_obj]), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
-        return(gene_samples)
+        gene_samples += [(subject.Subject(sample["ID"], genes = [gene_obj]), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
+    return(gene_samples)
 
 @parameterized.expand(prep_samples())
 def test_sample_haplotypes(subj, gene_obj, sample):
@@ -41,3 +42,4 @@ def test_sample_haplotypes(subj, gene_obj, sample):
 
 if __name__ == "__main__":
     test_sample_haplotypes()
+    

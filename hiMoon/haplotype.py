@@ -6,6 +6,9 @@ import numpy as np
 from pulp import *
 from .gene import AbstractGene
 
+class NoVariantsException(Exception):
+    pass
+
 class Haplotype:
 
     def __init__(self, gene: AbstractGene, sample_prefix: str) -> None:
@@ -22,7 +25,8 @@ class Haplotype:
         self.matched = False
         self.sample_prefix = sample_prefix
         self.genotypes = gene.get_sample_vars(sample_prefix)
-
+        if len(self.genotypes) == 0:
+            raise NoVariantsException
         self.translation_table = gene.get_translation_table_copy()
         self.chromosome = gene.chromosome
         self.version = gene.version

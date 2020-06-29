@@ -1,6 +1,6 @@
 import sys
 
-from .haplotype import Haplotype
+from .haplotype import Haplotype, NoVariantsException
 from .gene import AbstractGene
 from . import LOGGING
 
@@ -16,11 +16,18 @@ class Subject:
         self.prefix = prefix
         self.called_haplotypes = {}
         for gene in genes:
-            haplotype = Haplotype(gene, self.prefix)
-            haplotype.table_matcher()
-            self.called_haplotypes[str(gene)] = {
-                "HAPS": haplotype.optimize_hap(),
-                "CONTIG": gene.chromosome}
+            try:
+                haplotype = Haplotype(gene, self.prefix)
+                haplotype.table_matcher()
+                self.called_haplotypes[str(gene)] = {
+                    "HAPS": haplotype.optimize_hap(),
+                    "CONTIG": gene.chromosome}
+            except NoVariantsException:
+                LOGGING.warning(f"{self.prefix} has no variants, returning NA")
+                self.called_haplotypes[str(gene)] = {
+                    "HAPS": ("NA", "NA", "NA"),
+                    "CONTIG": gene.chromosome}
+
     
     def __str__(self):
         return self.prefix

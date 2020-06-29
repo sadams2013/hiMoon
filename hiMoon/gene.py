@@ -19,7 +19,7 @@ class AbstractGene:
         """
         self.gene = None
         self.accession = None
-        self.translation_table, self.chromosome, self.reference = self.read_translation_table(translation_table)
+        self.read_translation_table(translation_table)
         self.gene = self.translation_table.iloc[-1, 1]
         self.max = self.translation_table.iloc[:,5].dropna().max() + int(CONFIG.VARIANT_QUERY_PARAMETERS["5p_offset"])
         self.min = self.translation_table.iloc[:,4].dropna().min() - int(CONFIG.VARIANT_QUERY_PARAMETERS["3p_offset"])
@@ -51,7 +51,7 @@ class AbstractGene:
                 pass
         return sample_vars
     
-    def read_translation_table(self, translation_table: str) -> pd.DataFrame:
+    def read_translation_table(self, translation_table: str) -> None:
         """
         Read and process a translation table, returns a data frame.
         This is separated from the class instance such that each subject has
@@ -59,14 +59,10 @@ class AbstractGene:
         
         Args:
             translation_table (str): path to translation table file
-            CONFIG (ConfigData): CONFIG.Config object
-        
-        Returns:
-            pd.DataFrame: translation table as pandas data frame
         """
         with open(translation_table, 'rt') as trans_file:
             self.version = trans_file.readline().strip("#version=\n\t")
-        translation_table = pd.read_csv(
+        self.translation_table = pd.read_csv(
                                         translation_table, 
                                         skipinitialspace = True,
                                         delim_whitespace=True,
@@ -79,15 +75,16 @@ class AbstractGene:
                                                 "Reference Allele", "Variant Allele",
                                                 "Type"]
                                         )
-        translation_table.iloc[:,0] = translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
-        accession = translation_table.iloc[-1, 3]
-        chromosome = CONFIG.CHROMOSOME_ACCESSIONS[accession]
-        translation_table["ID"] = translation_table.apply(lambda x: f"c{chromosome}_{x.iloc[4]}", axis = 1)
+        self.translation_table.iloc[:,0] = self.translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
         try:
-            reference = translation_table[translation_table["ReferenceSequence"] == "REFERENCE"]["Haplotype Name"][0]
+            self.reference = self.translation_table[self.translation_table["rsID"] == "REFERENCE"]["Haplotype Name"][0]
         except IndexError:
-            reference = "REF"
-        return translation_table, chromosome, reference
+            self.reference = "REF"
+        self.translation_table = self.translation_table[self.translation_table["ReferenceSequence"] != "."]
+        self.accession = self.translation_table.iloc[-1, 3]
+        self.chromosome = CONFIG.CHROMOSOME_ACCESSIONS[self.accession]
+        self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x.iloc[4]}", axis = 1)
+        
     
     def get_translation_table_copy(self) -> pd.DataFrame:
         """
