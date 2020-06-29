@@ -21,6 +21,8 @@ hiMoon.egg-info/
 *.bai
 
 !hiMoon/tests/test_files/*
+!hiMoon/tests/test_files/vcf/*
+!hiMoon/tests/test_files/translation_tables/*
 
 !CYP2D6.NC_000022.11.haplotypes.tsv
 !template.vcf
