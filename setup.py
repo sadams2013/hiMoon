@@ -11,7 +11,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Development Status :: 4 - Beta",
         "Environment :: Console",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: POSIX",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Healthcare Industry"
