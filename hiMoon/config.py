@@ -86,13 +86,13 @@ class ConfigData:
         """
         self.config = configparser.ConfigParser()
         self.config.read(config_path)
-        self.chromosome_accessions()
-        self.iupac_codes()
-        self.variant_query_params()
+        self._chromosome_accessions()
+        self._iupac_codes()
+        self._variant_query_params()
         if write_config:
-            self.write_config(config_path)
+            self._write_config(config_path)
     
-    def chromosome_accessions(self) -> None:
+    def _chromosome_accessions(self) -> None:
         """
         Set chromosome accessions
         """
@@ -104,7 +104,7 @@ class ConfigData:
             self.config["CHROMOSOME ACCESSIONS"] = self.CHROMOSOME_ACCESSIONS
         self.CHROMOSOME_ACCESSIONS = {**self.CHROMOSOME_ACCESSIONS, **BASE_ACCESSION}
     
-    def iupac_codes(self) -> None:
+    def _iupac_codes(self) -> None:
         """
         Set IUPAC nucleotide codes
         """
@@ -117,7 +117,7 @@ class ConfigData:
             self.IUPAC_CODES = IUPAC_CODES
             self.config["IUPAC CODES"] = {code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()}
     
-    def variant_query_params(self) -> None:
+    def _variant_query_params(self) -> None:
         """
         Set variant query parameters
         """
@@ -133,7 +133,7 @@ class ConfigData:
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
     
-    def write_config(self, config_path: str) -> None:
+    def _write_config(self, config_path: str) -> None:
         """
         Write default/modified parameters to file at config_path
 
