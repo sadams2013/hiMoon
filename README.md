@@ -75,6 +75,16 @@ The format for these tables is the same format that can be exported from PharmVA
 While several genes are available from PharmVAR, users will also need to manually produce translation tables for their genes of interest. 
 See the "Translation Table Format" section for details on the format. 
 
+If you provide a multi-sample VCF, hiMoon will automatically perform haplotype matching for each sample in your VCF. 
+To select a single sample from the VCF, use ```-s SAMPLE_ID``` to select your specific sample. 
+
+#### Output
+
+By default, hiMoon produces a valid VCF v4.3 that contains per sample haplotype calls. 
+The REF column is populated with the reference haplotype (e.g. *1), and the alts correspond to named haplotypes. 
+For multi-sample VCF files and complex genes (e.g. CYP2D6), this can produce a substantial ALT column. 
+
+TODO: allow output of a flat file (e.g. CSV, TSV).
 
 ### API
 
