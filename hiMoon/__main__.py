@@ -32,15 +32,13 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Match haplotypes, return raw data and/or reports.", prog="hiMoon")
-    parser.add_argument("-f", "--vcffile",
-                        help="path/to/vcf file", default="")
+    parser.add_argument("vcffile", help="path/to/vcf file")
     parser.add_argument("-t", "--translation-tables",
-                        help="Directory with translation tables or a single translation table file",
+                        help="Directory with translation tables or a single translation table file", 
                         default=None)
     parser.add_argument("-o", "--output-directory",
                         default="./",
-                        help="Directory for Output Files. \
-                        If not specified, will output calls to stdout.")
+                        help="Directory for Output Files.")
     parser.add_argument("-c", "--config-file",
                         default=None,
                         help="path to config file.")
@@ -52,12 +50,14 @@ def main() -> None:
                         default=None)
     
     args = vars(parser.parse_args())
+    if args["translation_tables"] is None:
+        print("You must provide a translation table or a directory with translation tables.")
+        sys.exit(1)
     if args["loglevel_info"]:
         set_logging_info()
     if args["config_file"]:
         set_config(args["config_file"])
     vcf, genes = get_vcf_genes(args)
-    contigs = [g.chromosome for g in genes]
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)

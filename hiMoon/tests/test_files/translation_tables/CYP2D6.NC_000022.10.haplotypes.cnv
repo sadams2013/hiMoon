@@ -1,4 +1,4 @@
-#version=ARIEL-1.0
+#version=cyp2d6_GRCh37_1000_genomes
 Haplotype Name	Gene	rsID	ReferenceSequence	Variant Start	Variant Stop	Reference Allele	Variant Allele	Type
 CYP2D6*5.001	CYP2D6	CYP2D6	NC_000022.10	42523949	42533891	T	<CN0>	CNV
 CYP2D6*2_x2	CYP2D6	CYP2D6	NC_000022.10	42523949	42533891	T	<CN2>	CNV
