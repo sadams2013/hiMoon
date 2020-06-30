@@ -33,9 +33,25 @@ def prep_samples() -> []:
         gene_samples += [(subject.Subject(sample["ID"], genes = [gene_obj]), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
     return(gene_samples)
 
+def rm_sub_allele(allele: str) -> str:
+    """
+    Remove suballele from a called named allele.
+    (star)2.001 -> (star)2
+    (star)2.001_x2 -> (star)2x2
+
+    Args:
+        allele (str): [description]
+
+    Returns:
+        str: [description]
+    """
+    sv = allele.split("_")[-1] if "_" in allele else None
+    main_allele = allele.split(".")[0]
+    return "".join([main_allele, sv]) if sv else main_allele
+
 @parameterized.expand(prep_samples())
 def test_sample_haplotypes(subj, gene_obj, sample):
-    haps = sorted([i.split(".")[0] for i in subj.called_haplotypes[str(gene_obj)]["HAPS"][1]])
+    haps = sorted([rm_sub_allele(i) for i in subj.called_haplotypes[str(gene_obj)]["HAPS"][1]])
     print(f"{sample['ID']} @ {str(gene_obj)} should be {'/'.join(sample['ALLELES'])}. Found {'/'.join(haps)}")
     assert haps == sorted(sample["ALLELES"])
 

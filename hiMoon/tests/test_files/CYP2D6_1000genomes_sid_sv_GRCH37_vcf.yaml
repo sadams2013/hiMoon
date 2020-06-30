@@ -5,5 +5,15 @@ SAMPLES:
   - CYP2D6(star)5
   ID: HG00276
   NOTES: '*4/*5'
+- ALLELES:
+  - CYP2D6(star)2x2
+  - CYP2D6(star)22
+  ID: HG00337
+  NOTES: '*2x2/*22'
+- ALLELES:
+  - CYP2D6(star)4x2
+  - CYP2D6(star)5
+  ID: HG01190
+  NOTES: '*68+*4/*5, 1000 genomes SV does not identify hybrid allele, just whole gene duplication'
 TRANSLATION_TABLE: translation_tables/CYP2D6.NC_000022.10.haplotypes.tsv
 VCF: vcf/test_samples.GRCh37.SV_SID.bcf 
