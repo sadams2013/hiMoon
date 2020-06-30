@@ -4,12 +4,12 @@ base = None
 
 setup(
     name="hiMoon",
-    version="0.02",
+    version="0.1",
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Console",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX",
