@@ -8,6 +8,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",
         "License :: OSI Approved :: MIT License",
@@ -15,7 +16,7 @@ setup(
         "Intended Audience :: Science/Research",
         "Intended Audience :: Healthcare Industry"
     ],
-    description="Match NGS data with defined haplotypes",
+    description="Define names haplotypes from data stored in VCF",
     author="Solomon M. Adams, PharmD, PhD",
     author_email="sadams07@su.edu",
     packages=find_packages(),
@@ -24,7 +25,8 @@ setup(
     install_requires=[
         "pulp",
         "pandas",
-        "pysam"
+        "pysam",
+        "numpy"
     ]
 )
 
