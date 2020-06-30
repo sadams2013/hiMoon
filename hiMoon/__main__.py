@@ -20,7 +20,7 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     Returns:
         Tuple
     """
-    vcf = VarFile(args["vcffile"], args["sample"])
+    vcf = VarFile(args["vcf_file"], args["sample"])
     genes = []
     if args["translation_tables"][-3:] == "tsv":
         genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf))
@@ -32,7 +32,7 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Match haplotypes, return raw data and/or reports.", prog="hiMoon")
-    parser.add_argument("vcffile", help="path/to/vcf file")
+    parser.add_argument("vcf_file", help="path/to/vcf file", nargs="?")
     parser.add_argument("-t", "--translation-tables",
                         help="Directory with translation tables or a single translation table file", 
                         default=None)
@@ -41,7 +41,7 @@ def main() -> None:
                         help="Directory for Output Files.")
     parser.add_argument("-c", "--config-file",
                         default=None,
-                        help="path to config file.")
+                        help="path to config file. -c default will write a config file that can be modified for this.")
     parser.add_argument("-i", "--loglevel-info",
                         help="Use more verbose logging output (useful for debugging).",
                         action="store_true")
@@ -50,6 +50,11 @@ def main() -> None:
                         default=None)
     
     args = vars(parser.parse_args())
+    if args["config_file"] ==  "default":
+        LOGGING.warning("Writing default config file and exiting")
+        CONFIG.write_config("himoon_config.ini")
+        sys.exit(0)
+
     if args["translation_tables"] is None:
         print("You must provide a translation table or a directory with translation tables.")
         sys.exit(1)
@@ -60,7 +65,7 @@ def main() -> None:
     vcf, genes = get_vcf_genes(args)
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
-    write_variant_file(out_dir, subjects, args["vcffile"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
+    write_variant_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
 
 if __name__ == "__main__": 
     main()

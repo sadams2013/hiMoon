@@ -76,7 +76,7 @@ IUPAC_CODES = {
 
 class ConfigData:
 
-    def __init__(self, config_path: str = "config.ini", write_config: bool = False) -> None:
+    def __init__(self, config_path: str = "config.ini") -> None:
         """
         Create a new config class that is used throughout to set various parameters
 
@@ -89,8 +89,6 @@ class ConfigData:
         self._chromosome_accessions()
         self._iupac_codes()
         self._variant_query_params()
-        if write_config:
-            self._write_config(config_path)
     
     def _chromosome_accessions(self) -> None:
         """
@@ -133,7 +131,7 @@ class ConfigData:
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
     
-    def _write_config(self, config_path: str) -> None:
+    def write_config(self, config_path: str) -> None:
         """
         Write default/modified parameters to file at config_path
 
