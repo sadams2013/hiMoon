@@ -27,6 +27,15 @@ Or clone this repository and run:
 
 ```python setup.py install```
 
+### Configuration
+
+hiMoon configuration is managed through config.py, which provides several default configuration parameters that coveres most simple use-cases. 
+However, custom configuration can be provided by defining a file called config.ini. 
+This file can define contig accessions, VCF parsing parameters, and IUPAC codes. 
+While it is not expected that these will need to be manually defined/overridden in most cases, there are certainly instances where users might want to tweak them. 
+
+To create a base configuration file based on the default parameters, you can call ```hiMoon -c default```, which will write a file called 'himoon_config.ini' that you can modify as needed. 
+
 ### hiMoon CLI
 
 Working with the command line interface is fairly straightforward. 
@@ -49,7 +58,7 @@ optional arguments:
   -o OUTPUT_DIRECTORY, --output-directory OUTPUT_DIRECTORY
                         Directory for Output Files.
   -c CONFIG_FILE, --config-file CONFIG_FILE
-                        path to config file.
+                        path to config file. -c default will write a config file that can be modified for this. 
   -i, --loglevel-info   Use more verbose logging output (useful for debugging).
   -s SAMPLE, --sample SAMPLE
                         Single sample from multisample ID (if not specified, will do all)
@@ -66,45 +75,6 @@ The format for these tables is the same format that can be exported from PharmVA
 While several genes are available from PharmVAR, users will also need to manually produce translation tables for their genes of interest. 
 See the "Translation Table Format" section for details on the format. 
 
-### Configuration
-
-Configuration information for hiMoon is specified in a file called config.ini, which must be located in the directory from which hiMoon is being called. 
-If one is not present, hiMoon will create one with default values. 
-The config.ini file in this repository is commented with all possible fields to document structure. 
-
-### Running from the command line
-
-After installation, hiMoon can be invoked by simply calling: 
-
-```
-hiMoon -h
-
-usage: hiMoon [-h] [-f VCFFILE] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY]
-              [-c CONFIG_FILE] [-i] [-s SAMPLE]
-
-Match haplotypes, return raw data and/or reports.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -f VCFFILE, --vcffile VCFFILE
-                        path/to/vcf file
-  -t TRANSLATION_TABLES, --translation-tables TRANSLATION_TABLES
-                        Directory with translation tables or a single
-                        translation table file
-  -o OUTPUT_DIRECTORY, --output-directory OUTPUT_DIRECTORY
-                        Directory for Output Files. If not specified, will
-                        output calls to stdout.
-  -c CONFIG_FILE, --config-file CONFIG_FILE
-                        path to config file.
-  -i, --loglevel-info   Use more verbose logging output (useful for
-                        debugging).
-  -s SAMPLE, --sample SAMPLE
-                        Single sample from multisample ID (if not specified,
-                        will do all)
-```
-
-You must provide a VCF file that is indexed. 
-
 
 ### API
 
@@ -118,7 +88,14 @@ get_haps_from_vcf(translation_table_path: str, vcf_file_path: str, sample_id: st
 get_haps_from_variants(translation_table_path: str, vcf_data: str, sample_id: str, config_path = None) -> tuple
 ```
 
-TODO...
+## Issues
+
+Please use issues in this repo to report issues or bugs. 
+
+## Contributing
+
+Contributions through pull requests are welcome. 
+Also criticisms, suggestions, etc... through issues are also fine with me. 
 
 # Appendices
 
