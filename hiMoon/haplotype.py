@@ -153,7 +153,7 @@ class Haplotype:
 
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
-        num_sv = svs.shape[0]
+        num_sv = svs["MATCH"].sum()
 
         hap_vars = []
 
