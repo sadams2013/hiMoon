@@ -1,6 +1,7 @@
 # hiMoon: Determine Named Haplotypes from VCF
 
-![himoon_hap](https://github.com/sadams2013/hiMoon/workflows/himoon_hap/badge.svg)
+![hiMoon](https://github.com/sadams2013/hiMoon/workflows/himoon_hap/badge.svg)
+![PyPI](https://github.com/sadams2013/hiMoon/workflows/Upload%20to%20PyPI/badge.svg)
 
 ## Read before using
 
