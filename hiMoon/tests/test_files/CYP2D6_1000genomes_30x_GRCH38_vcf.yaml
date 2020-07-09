@@ -1,0 +1,9 @@
+GENE: CYP2D6
+SAMPLES:
+- ALLELES:
+  - CYP2D6(star)15
+  - CYP2D6(star)17
+  ID: NA19239
+  NOTES: '*15/*17'
+TRANSLATION_TABLE: translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv
+VCF: vcf/nygc_30X_SID.vcf.gz

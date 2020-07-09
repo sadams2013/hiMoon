@@ -22,7 +22,7 @@ from hiMoon import gene, vcf, subject, config, himoon
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
-VCF = vcf.VarFile(PATH + "/test_files/vcf/NA12878_chr22.bcf")
+VCF = vcf.VarFile(PATH + "/test_files/vcf/test_samples.bcf")
 CYP2D6_TABLE = PATH + "/test_files/translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv"
 GENE = gene.AbstractGene(CYP2D6_TABLE, vcf = VCF)
 SUBJ = subject.Subject("NA12878", genes = [GENE])
@@ -60,14 +60,14 @@ class TestSubject(unittest.TestCase):
 class TestVCF(unittest.TestCase):
 
     def test_samples(self):
-        self.assertEqual(VCF.samples[0], "NA12878")
+        self.assertEqual(VCF.samples[0], "HG00111")
 
 class TestHiMoon(unittest.TestCase):
 
     def test_himoon(self):
         haps = himoon.get_haps_from_vcf(
             PATH + "/test_files/translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv",
-            PATH + "/test_files/vcf/NA12878_chr22.bcf",
+            PATH + "/test_files/vcf/test_samples.bcf",
             "NA12878"
         )
         HAPS = sorted([i.split(".")[0] for i in haps[1]])
