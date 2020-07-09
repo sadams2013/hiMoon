@@ -37,6 +37,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
+        self.allowed_no_match = gene.allowed_no_match
         self.solver = gene.solver
         self.matched = False
         self.sample_prefix = sample_prefix
@@ -62,8 +63,13 @@ class Haplotype:
                 axis = 1
                 )
         self.translation_table = self.translation_table.drop(self.translation_table.index[self.translation_table["MATCH"] == 99].tolist())
-        no_match = self.translation_table[self.translation_table["MATCH"] == 0].iloc[:,0].unique() # Haplotypes where there is any variant not matching
-        self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(no_match)] # Drop haplotypes that don't match 100%
+        haps = self.translation_table["Haplotype Name"]
+        no_match = self.translation_table[self.translation_table["MATCH"] == 0].iloc[:,0] # Haplotypes where there is any variant not matching
+        drops = []
+        for i in no_match.unique():
+            if sum([i == k for k in no_match]) / sum([i == h for h in haps]) > self.allowed_no_match:
+                drops.append(i)
+        self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(drops)] # Drop haplotypes that don't match 100%
         self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 

@@ -18,7 +18,9 @@ from .haplotype import Haplotype
 from .subject import Subject
 from . import CONFIG, set_config
 
-def get_haps_from_vcf(translation_table_path: str, vcf_file_path: str, sample_id: str, solver: str = "CBC", config_path: str = None) -> tuple:
+def get_haps_from_vcf(translation_table_path: str, vcf_file_path: str, 
+                        sample_id: str, solver: str = "CBC", 
+                        config_path: str = None, allowed_no_match: float = 0.0) -> tuple:
     """
     Provide a VCF file, sample ID, and translation table
     Get called haplotypes and additional information
@@ -35,12 +37,14 @@ def get_haps_from_vcf(translation_table_path: str, vcf_file_path: str, sample_id
     if config_path:
         set_config(config_path)
     vcf = VarFile(vcf_file_path, sample_id)
-    gene = AbstractGene(translation_table_path, vcf = vcf, solver = solver)
+    gene = AbstractGene(translation_table_path, vcf = vcf, solver = solver, allowed_no_match = allowed_no_match)
     haplotype = Haplotype(gene, sample_id)
     haplotype.table_matcher()
     return haplotype.optimize_hap()
 
-def get_haps_from_variants(translation_table_path: str, vcf_data: str, sample_id: str, solver: str = "CBC", config_path: str = None) -> tuple:
+def get_haps_from_variants(translation_table_path: str, vcf_data: str, 
+                            sample_id: str, solver: str = "CBC", 
+                            config_path: str = None, allowed_no_match: float = 0.0) -> tuple:
     """
     Same as get_haps_from_vcf, but bypasses the VCF file so that you can provide formatted variants from another input
     Get called haplotypes and additional information
@@ -56,7 +60,7 @@ def get_haps_from_variants(translation_table_path: str, vcf_data: str, sample_id
     """
     if config_path:
         set_config(config_path)
-    gene = AbstractGene(translation_table_path, variants = vcf_data, solver = solver)
+    gene = AbstractGene(translation_table_path, variants = vcf_data, solver = solver, allowed_no_match = allowed_no_match)
     haplotype = Haplotype(gene, sample_id)
     haplotype.table_matcher()
     return haplotype.optimize_hap()

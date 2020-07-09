@@ -24,13 +24,14 @@ class AbstractGene:
     names haplotypes and subjects. 
     """
 
-    def __init__(self, translation_table: str, vcf: VarFile = None, variants = None, solver: str = "CBC") -> None:
+    def __init__(self, translation_table: str, vcf: VarFile = None, variants = None, solver: str = "CBC", allowed_no_match: float = 0.0) -> None:
         """Create a Gene object
         
         Args:
             translation_table (str): path to translation table
             vcf (VarFile): parsed VCF object from vcf.VarFile
         """
+        self.allowed_no_match = allowed_no_match
         self.solver = solver
         self.gene = None
         self.accession = None

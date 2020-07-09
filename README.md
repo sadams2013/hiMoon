@@ -49,10 +49,9 @@ Working with the command line interface is fairly straightforward.
 You can start with: 
 
 ```
-hiMoon -h
-
 usage: hiMoon [-h] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY]
               [-c CONFIG_FILE] [-i] [-s SAMPLE] [-S SOLVER]
+              [-M ALLOWED_NO_MATCH]
               [vcf_file]
 
 Match haplotypes, return raw data and/or reports.
@@ -77,6 +76,9 @@ optional arguments:
                         will do all)
   -S SOLVER, --solver SOLVER
                         Solver to use (GLPK or CBC), default = CBC
+  -M ALLOWED_NO_MATCH, --allowed-no-match ALLOWED_NO_MATCH
+                        Percent of alleles that are allowed to not match to
+                        still call haplotype, default is 0.0
 ```
 
 You must provide a compressed (.vcf.gz, .bcf) and indexed (.tbi, .csi) VCF file. 
