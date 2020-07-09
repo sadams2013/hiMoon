@@ -45,24 +45,32 @@ You can start with:
 ```
 hiMoon -h
 
-usage: hiMoon [-h] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY] [-c CONFIG_FILE] [-i] [-s SAMPLE] vcffile
+usage: hiMoon [-h] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY]
+              [-c CONFIG_FILE] [-i] [-s SAMPLE] [-S SOLVER]
+              [vcf_file]
 
 Match haplotypes, return raw data and/or reports.
 
 positional arguments:
-  vcffile               path/to/vcf file
+  vcf_file              path/to/vcf file
 
 optional arguments:
   -h, --help            show this help message and exit
   -t TRANSLATION_TABLES, --translation-tables TRANSLATION_TABLES
-                        Directory with translation tables or a single translation table file
+                        Directory with translation tables or a single
+                        translation table file
   -o OUTPUT_DIRECTORY, --output-directory OUTPUT_DIRECTORY
                         Directory for Output Files.
   -c CONFIG_FILE, --config-file CONFIG_FILE
-                        path to config file. -c default will write a config file that can be modified for this. 
-  -i, --loglevel-info   Use more verbose logging output (useful for debugging).
+                        path to config file. -c default will write a config
+                        file that can be modified for this.
+  -i, --loglevel-info   Use more verbose logging output (useful for
+                        debugging).
   -s SAMPLE, --sample SAMPLE
-                        Single sample from multisample ID (if not specified, will do all)
+                        Single sample from multisample ID (if not specified,
+                        will do all)
+  -S SOLVER, --solver SOLVER
+                        Solver to use (GLPK or CBC), default = CBC
 ```
 
 You must provide a compressed (.vcf.gz, .bcf) and indexed (.tbi, .csi) VCF file. 
