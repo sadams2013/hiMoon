@@ -4,7 +4,7 @@ base = None
 
 setup(
     name="hiMoon",
-    version="0.3",
+    version="0.4",
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
