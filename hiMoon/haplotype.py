@@ -37,6 +37,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
+        self.solver = gene.solver
         self.matched = False
         self.sample_prefix = sample_prefix
         self.genotypes = gene.get_sample_vars(sample_prefix)
@@ -186,8 +187,11 @@ class Haplotype:
             self.translation_table[
                 self.translation_table.iloc[:,0] == self.haplotypes[i]
                 ]["MATCH"].sum() * haplotypes[i] for i in range(num_haps))
-
-        hap_prob.solve()
+        
+        if self.solver == "GLPK":
+            hap_prob.solve(GLPK(msg=0))
+        else:
+            hap_prob.solve()
         haps = []
         variants = []
 

@@ -36,11 +36,12 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     """
     vcf = VarFile(args["vcf_file"], args["sample"])
     genes = []
+    solver = args["solver"]
     if args["translation_tables"][-3:] == "tsv":
-        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf))
+        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(AbstractGene(os.path.abspath(translation_table), vcf))
+            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver))
     return vcf, genes
 
 def main() -> None:
@@ -62,6 +63,9 @@ def main() -> None:
     parser.add_argument("-s", "--sample",
                         help="Single sample from multisample ID (if not specified, will do all)",
                         default=None)
+    parser.add_argument("-S", "--solver",
+                    help="Solver to use (GLPK or CBC), default = CBC",
+                    default="CBC")
     
     args = vars(parser.parse_args())
     if args["config_file"] ==  "default":
