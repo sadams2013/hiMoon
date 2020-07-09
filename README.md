@@ -9,6 +9,12 @@ hiMoon is provided such that you might find it useful.
 Users should be aware that named haplotype calling is dependent on the breadth and quality of data provided. 
 If you use this tool, you need to understand how it works and inherent limitations of the methods employed. 
 
+### Main Rules for Use
+
+1. Know your input data! hiMoon will work with what you give it, so Garbage In Garbage Out applies. 
+2. Function will be erratic until a 1.0 release (i.e. beta only), this is especially important for CYP2D6. 
+3. Validate with known samples + edge cases before using in any meaningful application. 
+
 **hiMoon is intended for research use only.**
 
 ## Description
