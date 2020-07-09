@@ -82,7 +82,7 @@ class Haplotype:
             return "-"
         elif len(ref) > len(alt):
             return "id-"
-        elif len(ref) > 1:
+        elif len(ref) < len(alt):
             return f'id{alt[1:]}' # Remove first position
         else:
             return f's{alt}'
@@ -108,7 +108,7 @@ class Haplotype:
             except KeyError:
                 return [f's{alt}']
 
-    def _match(self, row: pd.core.series.Series, genotypes: [str]) -> int:
+    def _match(self, row: pd.core.series.Series, genotypes: {}) -> int:
         """
         Evaluate match in a single translation table row with a sample
 
