@@ -38,10 +38,10 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     genes = []
     solver = args["solver"]
     if args["translation_tables"][-3:] == "tsv":
-        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver, allowed_no_match = args["allowed_no_match"]))
+        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver, allowed_no_match = float(args["allowed_no_match"])))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver, allowed_no_match = args["allowed_no_match"]))
+            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver, allowed_no_match = float(args["allowed_no_match"])))
     return vcf, genes
 
 def main() -> None:
