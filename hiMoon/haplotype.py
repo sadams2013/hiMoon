@@ -37,6 +37,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
+        self.phased_matcher = gene.phased_matcher
         self.allowed_no_match = gene.allowed_no_match
         self.solver = gene.solver
         self.matched = False
@@ -71,7 +72,6 @@ class Haplotype:
         self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(drops)] # Drop haplotypes that don't match 100%
         self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "STRAND", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
-        self.phased_optimize()
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
         """Modifies record from VCF to standardized form
@@ -134,7 +134,7 @@ class Haplotype:
             ID = row["ID"]
         try:
             genotype = self.genotypes[ID]
-        except KeyError:
+        except KeyError: # Not in VCF
             return 99, strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
@@ -150,65 +150,44 @@ class Haplotype:
             strand = 3
         return alt_matches, strand
     
-    def optimize_hap(self) -> ():
-        """
-        Solve for the most likely diplotype
-
-        Returns:
-            (): Results
-        """
-        if not self.matched:
-            print("You need to run the table_matcher function with genotyped before you can optimize")
-            sys.exit(1)
-        
+    
+    def lp_hap(self):
+        match_ref = False
         svs = self.variants[self.variants["Type"] == "CNV"]
-
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
         num_sv = svs["MATCH"].sum()
-
         hap_vars = []
-
         for hap in self.haplotypes:
             trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
-
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
-        
         # Define the haplotypes variable
         haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
-        
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= 2) # Cannot choose more than two haplotypes
-
         # Any CNV variants defined, if matched with a haplotype, MUST be used
         # Otherwise, variants like CYP2D6*5 will be missed by the other methods
         hap_prob += (lpSum(variants[i] for i in range(num_vars) if self.variants.iloc[i, 2] == "CNV") == num_sv)
-
         hap_prob += "CYP2D6(star)2.019" !=  (haplotypes[i] for i in range(num_haps))
-
-
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
             hap_prob += (variants[i] <= (lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))))
             # A given variant cannot be used more than "MATCH"
             hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) <= self.variants.iloc[i,1] * variants[i])
-
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
                 self.translation_table.iloc[:,0] == self.haplotypes[i]
                 ]["MATCH"].sum() * haplotypes[i] for i in range(num_haps))
-        
         if self.solver == "GLPK":
             hap_prob.solve(GLPK(msg=0))
         else:
             hap_prob.solve()
         haps = []
         variants = []
-
         for v in hap_prob.variables():
             if v.varValue:
                 if v.varValue > 0:
@@ -224,15 +203,65 @@ class Haplotype:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
             if len(called) == 1:
                 called.append(self.reference)
-        return self.version, called, variants, self.translation_table
+        opt = hap_prob.objective.value()
+        while True:
+            print(haps)
+            hap_prob += lpSum([h.value() * h for h in haplotypes]) <= len(haps) - 1
+            hap_prob.solve()
+            if hap_prob.objective.value() >= opt - 1:
+                haps = []
+                variants = []
+                for v in hap_prob.variables():
+                    if v.varValue:
+                        if v.varValue > 0:
+                            if v.name.split("_")[0] == f'c{self.chromosome}':
+                                variants.append(v.name)
+                            else:
+                                haps.append((v.name, v.varValue))
+            else:
+                break
+            if len(haps) > 2:
+                break
+        return called, variants, hap_prob.objective.value(), match_ref
+    
+    def optimize_hap(self) -> ():
+        """
+        Solve for the most likely diplotype
+
+        Returns:
+            (): Results
+        """
+        possible_calls = []
+        if not self.matched:
+            print("You need to run the table_matcher function with genotyped before you can optimize")
+            sys.exit(1)
+        if self.phased_matcher:
+            phased_haps = self.phased_optimize()
+        else:
+            phased_haps = (".", ".")
+        called, variants, first_pass_value, match_ref = self.lp_hap()
+        return self.version, called, variants, self.translation_table, phased_haps
     
     def get_max(self, d):
-        max_value = max(d.values())  # maximum value
-        max_keys = [k for k, v in d.items() if v == max_value]
-        return max_keys
+        """
 
+        Args:
+            d ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        try:
+            max_value = max(d.values())  # maximum value
+            max_keys = [k for k, v in d.items() if v == max_value]
+            return max_keys
+        except:
+            return [self.reference]
     
     def phased_optimize(self):
+        """
+        Runs the phased haplotype matchers
+        """
         strand1_haps = {}
         strand2_haps = {}
         for haplotype in self.haplotypes:
@@ -242,10 +271,10 @@ class Haplotype:
                     strand1_haps[haplotype] = len(hap_table)
                 elif hap_table["STRAND"].unique()[0] == 2:
                     strand2_haps[haplotype] = len(hap_table)
-        
         s1 = self.get_max(strand1_haps)
         s2 = self.get_max(strand2_haps)
         print(s1, s2)
+        return s1, s2
 
 
     

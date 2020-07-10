@@ -24,13 +24,16 @@ class AbstractGene:
     names haplotypes and subjects. 
     """
 
-    def __init__(self, translation_table: str, vcf: VarFile = None, variants = None, solver: str = "CBC", allowed_no_match: float = 0.0) -> None:
+    def __init__(self, translation_table: str, vcf: VarFile = None, 
+                    variants = None, solver: str = "CBC", allowed_no_match: float = 0.0,
+                    phased_matcher: bool = False) -> None:
         """Create a Gene object
         
         Args:
             translation_table (str): path to translation table
             vcf (VarFile): parsed VCF object from vcf.VarFile
         """
+        self.phased_matcher = phased_matcher
         self.allowed_no_match = allowed_no_match
         self.solver = solver
         self.gene = None
@@ -174,4 +177,4 @@ class AbstractGene:
         self.accession = self.translation_table.iloc[-1, 3]
         self.chromosome = CONFIG.CHROMOSOME_ACCESSIONS[self.accession]
         self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
-
+        self.translation_table["EXCLUDE"] = 0
