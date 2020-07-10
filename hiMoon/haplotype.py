@@ -54,10 +54,9 @@ class Haplotype:
         Matches variants in the translation table with the subject's variants
         """
         self.matched = True
-        self.translation_table["MATCH"] = self.translation_table.apply(
-            lambda x: self._match(x, self.genotypes),
-            axis = 1
-        )
+        matches = self.translation_table.apply(self._match, axis = 1)
+        self.translation_table["MATCH"] = [m[0] for m in matches]
+        self.translation_table["STRAND"] = [m[1] for m in matches]
         self.translation_table["VAR_ID"] = self.translation_table.apply(
                 lambda x: f'{x["ID"]}_{str(x.iloc[7]).strip("<>")}',
                 axis = 1
@@ -70,8 +69,9 @@ class Haplotype:
             if sum([i == k for k in no_match]) / sum([i == h for h in haps]) > self.allowed_no_match:
                 drops.append(i)
         self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(drops)] # Drop haplotypes that don't match 100%
-        self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
+        self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "STRAND", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
+        self.phased_optimize()
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
         """Modifies record from VCF to standardized form
@@ -115,7 +115,7 @@ class Haplotype:
             except KeyError:
                 return [f's{alt}']
 
-    def _match(self, row: pd.core.series.Series, genotypes: {}) -> int:
+    def _match(self, row: pd.core.series.Series) -> (int, int):
         """
         Evaluate match in a single translation table row with a sample
 
@@ -126,24 +126,29 @@ class Haplotype:
         Returns:
             int: 99 (missing), 0, 1, or 2 (corresponds to the number of matched alleles for a particular position)
         """
+        strand = 0
         if row.iloc[8] in ["insertion", "deletion"]:
             new_pos = int(row["ID"].split("_")[1]) - 1
             ID = f'{row["ID"].split("_")[0]}_{new_pos}_SID'
         else:
             ID = row["ID"]
         try:
-            genotype = genotypes[ID]
+            genotype = self.genotypes[ID]
         except KeyError:
-            return 99
+            return 99, strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return 99    
+            return 99, strand
         if vcf_geno == ["-", "-"]:
-            return 99
+            return 99, strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
-        return(alt_matches)
+        if alt_matches == 1 and genotype["phased"]:
+            strand = max([vcf_geno.index(a) for a in tt_alt_geno]) + 1
+        elif alt_matches == 2 and genotype["phased"]:
+            strand = 3
+        return alt_matches, strand
     
     def optimize_hap(self) -> ():
         """
@@ -181,6 +186,9 @@ class Haplotype:
         # Otherwise, variants like CYP2D6*5 will be missed by the other methods
         hap_prob += (lpSum(variants[i] for i in range(num_vars) if self.variants.iloc[i, 2] == "CNV") == num_sv)
 
+        hap_prob += "CYP2D6(star)2.019" !=  (haplotypes[i] for i in range(num_haps))
+
+
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
@@ -217,4 +225,28 @@ class Haplotype:
             if len(called) == 1:
                 called.append(self.reference)
         return self.version, called, variants, self.translation_table
+    
+    def get_max(self, d):
+        max_value = max(d.values())  # maximum value
+        max_keys = [k for k, v in d.items() if v == max_value]
+        return max_keys
+
+    
+    def phased_optimize(self):
+        strand1_haps = {}
+        strand2_haps = {}
+        for haplotype in self.haplotypes:
+            hap_table = self.translation_table[self.translation_table["Haplotype Name"] == haplotype]
+            if len(hap_table["STRAND"].unique()) == 1:
+                if hap_table["STRAND"].unique()[0] == 1:
+                    strand1_haps[haplotype] = len(hap_table)
+                elif hap_table["STRAND"].unique()[0] == 2:
+                    strand2_haps[haplotype] = len(hap_table)
+        
+        s1 = self.get_max(strand1_haps)
+        s2 = self.get_max(strand2_haps)
+        print(s1, s2)
+
+
+    
         
