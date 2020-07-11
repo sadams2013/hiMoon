@@ -150,6 +150,25 @@ class Haplotype:
             strand = 3
         return alt_matches, strand
     
+    def _haps_from_prob(self, lp_problem):
+        haps = []
+        variants = []
+        for v in lp_problem.variables():
+            if v.varValue:
+                if v.varValue > 0:
+                    if v.name.split("_")[0] == f'c{self.chromosome}':
+                        variants.append(v.name)
+                    else:
+                        haps.append((v.name, v.varValue))
+        if len(haps) == 0:
+            called = [self.reference, self.reference]
+        elif len(haps) == 2:
+            called = [haps[0][0], haps[1][0]]
+        else:
+            called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
+            called.append(self.reference)
+        return called, variants, len(haps)
+    
     
     def lp_hap(self):
         match_ref = False
@@ -163,7 +182,7 @@ class Haplotype:
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
         # Define the haplotypes variable
-        haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
+        haplotypes = [LpVariable(hap, cat = "Binary") for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= 2) # Cannot choose more than two haplotypes
@@ -186,42 +205,16 @@ class Haplotype:
             hap_prob.solve(GLPK(msg=0))
         else:
             hap_prob.solve()
-        haps = []
-        variants = []
-        for v in hap_prob.variables():
-            if v.varValue:
-                if v.varValue > 0:
-                    if v.name.split("_")[0] == f'c{self.chromosome}':
-                        variants.append(v.name)
-                    else:
-                        haps.append((v.name, v.varValue))
-        if len(haps) == 0:
-            called = [self.reference, self.reference]
-        elif len(haps) == 2:
-            called = [haps[0][0], haps[1][0]]
-        else:
-            called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
-            if len(called) == 1:
-                called.append(self.reference)
-        opt = hap_prob.objective.value()
-        while True:
-            print(haps)
-            hap_prob += lpSum([h.value() * h for h in haplotypes]) <= len(haps) - 1
+        called, variants, hap_len = self._haps_from_prob(hap_prob)
+        print(called)
+        max_opt = hap_prob.objective.value()
+        opt = max_opt
+        while opt >= max_opt:
+            hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
             hap_prob.solve()
-            if hap_prob.objective.value() >= opt - 1:
-                haps = []
-                variants = []
-                for v in hap_prob.variables():
-                    if v.varValue:
-                        if v.varValue > 0:
-                            if v.name.split("_")[0] == f'c{self.chromosome}':
-                                variants.append(v.name)
-                            else:
-                                haps.append((v.name, v.varValue))
-            else:
-                break
-            if len(haps) > 2:
-                break
+            opt = hap_prob.objective.value()
+            called, variants, hap_len = self._haps_from_prob(hap_prob)
+            print(called)
         return called, variants, hap_prob.objective.value(), match_ref
     
     def optimize_hap(self) -> ():
