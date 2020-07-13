@@ -38,7 +38,6 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
-        self.phased_matcher = gene.phased_matcher
         self.solver = gene.solver
         self.matched = False
         self.sample_prefix = sample_prefix
@@ -179,13 +178,15 @@ class Haplotype:
         svs = self.variants[self.variants["Type"] == "CNV"]
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
-        num_sv = svs["MATCH"].sum()
+        
         hap_vars = []
         for hap in self.haplotypes:
             trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
+
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
-        # Define the haplotypes variable
+
+        # Define the haplotypes and variants variables
         haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
@@ -219,7 +220,7 @@ class Haplotype:
             hap_prob.solve()
             opt = hap_prob.objective.value()
             new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
-            if new_called == called:
+            if new_called == called or len(new_called) == 0:
                 break
             called = new_called
             possible_haplotypes.append(tuple(sorted(called)))
@@ -236,14 +237,10 @@ class Haplotype:
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
-        if self.phased_matcher:
-            phased_haps = self.phased_optimize()
-        else:
-            phased_haps = (".", ".")
         called, variants = self.lp_hap()
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}, see output flat file for details.")
-        return called, variants, phased_haps
+        return called, variants
     
     def get_max(self, d):
         """
@@ -261,20 +258,29 @@ class Haplotype:
         except:
             return [self.reference]
     
-    def phased_optimize(self):
-        """
-        Runs the phased haplotype matchers
-        """
-        strand1_haps = {}
-        strand2_haps = {}
-        for haplotype in self.haplotypes:
-            hap_table = self.translation_table[self.translation_table["Haplotype Name"] == haplotype]
-            if len(hap_table["STRAND"].unique()) == 1:
-                if hap_table["STRAND"].unique()[0] == 1:
-                    strand1_haps[haplotype] = len(hap_table)
-                elif hap_table["STRAND"].unique()[0] == 2:
-                    strand2_haps[haplotype] = len(hap_table)
-        s1 = self.get_max(strand1_haps)
-        s2 = self.get_max(strand2_haps)
-        return list(itertools.product(s1, s2))
+    # def phased_optimize(self):
+    #     """
+    #     Runs the phased haplotype matchers
+    #     """
+    #     strand1_haps = {}
+    #     strand2_haps = {}
+    #     for haplotype in self.haplotypes:
+    #         hap_table = self.translation_table[self.translation_table["Haplotype Name"] == haplotype]
+    #         if len(hap_table["STRAND"].unique()) == 1:
+    #             if hap_table["STRAND"].unique()[0] == 1:
+    #                 strand1_haps[haplotype] = len(hap_table)
+    #             elif hap_table["STRAND"].unique()[0] == 2:
+    #                 strand2_haps[haplotype] = len(hap_table)
+    #     print(strand1_haps)
+    #     s1 = self.get_max(strand1_haps)
+    #     s2 = self.get_max(strand2_haps)
+    #     combinations = []
+    #     perms = itertools.permutations(s1, len(s2))
+    #     for perm in perms:
+    #         zipped = zip(perm, s2)
+    #         combinations.append(list(zipped))
+    #     print(s1)
+    #     print(s2)
+    #     print(combinations)
+    #     return list(itertools.product(s1, s2))
       

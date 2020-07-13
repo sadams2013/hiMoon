@@ -106,6 +106,7 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
         outfile.header.add_sample(str(sub))
     for gene in genes:
         alleles = get_alleles(gene, subjects)
+        print(alleles)
         nr =outfile.new_record(
             contig = f"chr{gene.chromosome}",
             start = gene.min,
