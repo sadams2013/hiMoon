@@ -76,9 +76,6 @@ optional arguments:
                         will do all)
   -S SOLVER, --solver SOLVER
                         Solver to use (GLPK or CBC), default = CBC
-  -M ALLOWED_NO_MATCH, --allowed-no-match ALLOWED_NO_MATCH
-                        Percent of alleles that are allowed to not match to
-                        still call haplotype, default is 0.0
 ```
 
 You must provide a compressed (.vcf.gz, .bcf) and indexed (.tbi, .csi) VCF file. 
@@ -100,8 +97,11 @@ To select a single sample from the VCF, use ```-s SAMPLE_ID``` to select your sp
 By default, hiMoon produces a valid VCF v4.3 that contains per sample haplotype calls. 
 The REF column is populated with the reference haplotype (e.g. *1), and the alts correspond to named haplotypes. 
 For multi-sample VCF files and complex genes (e.g. CYP2D6), this can produce a substantial ALT column. 
+A "HC" score is provided for each sample that corresponds to 1 / {total number of possible genotypes}. 
+**Anytime the HC score is < 1 should trigger further investigation!**
 
-TODO: allow output of a flat file (e.g. CSV, TSV).
+hiMoon will alo create a TSV file that has one sample + gene call per line. 
+If multiple possible haplotype combinations are found, each call will be on a separate line. 
 
 ### API
 
