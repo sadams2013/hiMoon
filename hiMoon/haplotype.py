@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 import sys
+import itertools
 
 import pandas as pd
 import numpy as np
@@ -38,7 +39,6 @@ class Haplotype:
             sample_prefix (str): Sample ID 
         """
         self.phased_matcher = gene.phased_matcher
-        self.allowed_no_match = gene.allowed_no_match
         self.solver = gene.solver
         self.matched = False
         self.sample_prefix = sample_prefix
@@ -67,7 +67,7 @@ class Haplotype:
         no_match = self.translation_table[self.translation_table["MATCH"] == 0].iloc[:,0] # Haplotypes where there is any variant not matching
         drops = []
         for i in no_match.unique():
-            if sum([i == k for k in no_match]) / sum([i == h for h in haps]) > self.allowed_no_match:
+            if sum([i == k for k in no_match]) > 0:
                 drops.append(i)
         self.translation_table = self.translation_table[~self.translation_table.iloc[:,0].isin(drops)] # Drop haplotypes that don't match 100%
         self.variants = self.translation_table.loc[:,["VAR_ID", "MATCH", "STRAND", "Type", "Variant Start"]].drop_duplicates() # List of matched variants
@@ -135,13 +135,13 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return 99, strand
+            return 0, strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return 99, strand
+            return 0, strand
         if vcf_geno == ["-", "-"]:
-            return 99, strand
+            return 0, strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
@@ -171,7 +171,8 @@ class Haplotype:
     
     
     def lp_hap(self):
-        match_ref = False
+        possible_haplotypes = []
+        haplotype_variants = []
         svs = self.variants[self.variants["Type"] == "CNV"]
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
@@ -189,7 +190,6 @@ class Haplotype:
         # Any CNV variants defined, if matched with a haplotype, MUST be used
         # Otherwise, variants like CYP2D6*5 will be missed by the other methods
         hap_prob += (lpSum(variants[i] for i in range(num_vars) if self.variants.iloc[i, 2] == "CNV") == num_sv)
-        hap_prob += "CYP2D6(star)2.019" !=  (haplotypes[i] for i in range(num_haps))
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
@@ -206,7 +206,8 @@ class Haplotype:
         else:
             hap_prob.solve()
         called, variants, hap_len = self._haps_from_prob(hap_prob)
-        print(called)
+        possible_haplotypes.append(tuple(called))
+        haplotype_variants.append(tuple(variants))
         max_opt = hap_prob.objective.value()
         opt = max_opt
         while opt >= max_opt:
@@ -214,8 +215,9 @@ class Haplotype:
             hap_prob.solve()
             opt = hap_prob.objective.value()
             called, variants, hap_len = self._haps_from_prob(hap_prob)
-            print(called)
-        return called, variants, hap_prob.objective.value(), match_ref
+            possible_haplotypes.append(tuple(called))
+            haplotype_variants.append(tuple(variants))
+        return possible_haplotypes, haplotype_variants
     
     def optimize_hap(self) -> ():
         """
@@ -232,8 +234,8 @@ class Haplotype:
             phased_haps = self.phased_optimize()
         else:
             phased_haps = (".", ".")
-        called, variants, first_pass_value, match_ref = self.lp_hap()
-        return self.version, called, variants, self.translation_table, phased_haps
+        called, variants = self.lp_hap()
+        return called, variants, phased_haps
     
     def get_max(self, d):
         """
@@ -266,9 +268,5 @@ class Haplotype:
                     strand2_haps[haplotype] = len(hap_table)
         s1 = self.get_max(strand1_haps)
         s2 = self.get_max(strand2_haps)
-        print(s1, s2)
-        return s1, s2
-
-
-    
-        
+        return list(itertools.product(s1, s2))
+      

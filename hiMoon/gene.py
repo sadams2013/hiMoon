@@ -25,7 +25,7 @@ class AbstractGene:
     """
 
     def __init__(self, translation_table: str, vcf: VarFile = None, 
-                    variants = None, solver: str = "CBC", allowed_no_match: float = 0.0,
+                    variants = None, solver: str = "CBC", 
                     phased_matcher: bool = False) -> None:
         """Create a Gene object
         
@@ -34,7 +34,6 @@ class AbstractGene:
             vcf (VarFile): parsed VCF object from vcf.VarFile
         """
         self.phased_matcher = phased_matcher
-        self.allowed_no_match = allowed_no_match
         self.solver = solver
         self.gene = None
         self.accession = None
