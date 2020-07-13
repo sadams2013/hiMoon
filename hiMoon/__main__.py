@@ -39,13 +39,11 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     solver = args["solver"]
     if args["translation_tables"][-3:] == "tsv":
         genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, 
-                                solver = solver, allowed_no_match = float(args["allowed_no_match"]),
-                                phased_matcher = args["phased_matcher"]))
+                                solver = solver, phased_matcher = args["phased_matcher"]))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
             genes.append(AbstractGene(os.path.abspath(translation_table), vcf, 
-                                        solver = solver, allowed_no_match = float(args["allowed_no_match"]),
-                                        phased_matcher = args["phased_matcher"]))
+                                        solver = solver, phased_matcher = args["phased_matcher"]))
     return vcf, genes
 
 def main() -> None:
@@ -70,9 +68,6 @@ def main() -> None:
     parser.add_argument("-S", "--solver",
                         help="Solver to use (GLPK or CBC), default = CBC",
                         default="CBC")
-    parser.add_argument("-M", "--allowed-no-match",
-                        help="Percent of alleles that are allowed to not match to still call haplotype, default is 0.0",
-                        default=0.0)
     parser.add_argument("-P", "--phased-matcher",
                         help="Run phased matcher",
                         action="store_true")
