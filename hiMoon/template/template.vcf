@@ -2,5 +2,6 @@
 ##INFO=<ID=VARTYPE,Number=1,Type=String,Description="Type of Variant">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=VA,Number=.,Type=String,Description="Variants Included in Calls">
+##FORMAT=<ID=HC,Number=.,Type=Float,Description="Haplotype Confidence (0-1), based on the number of possible matches with equivalent confidence">
 ##FILTER=<ID=PASS,Description="All filters passed">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO

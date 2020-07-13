@@ -20,7 +20,7 @@ import numpy as np
 
 from pulp import *
 from .gene import AbstractGene
-from . import CONFIG
+from . import CONFIG, LOGGING
 
 class NoVariantsException(Exception):
     pass
@@ -135,13 +135,13 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return 0, strand
+            return 99, strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return 0, strand
+            return 99, strand
         if vcf_geno == ["-", "-"]:
-            return 0, strand
+            return 99, strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
@@ -151,6 +151,7 @@ class Haplotype:
         return alt_matches, strand
     
     def _haps_from_prob(self, lp_problem):
+        is_ref = False
         haps = []
         variants = []
         for v in lp_problem.variables():
@@ -162,12 +163,14 @@ class Haplotype:
                         haps.append((v.name, v.varValue))
         if len(haps) == 0:
             called = [self.reference, self.reference]
+            is_ref = True
         elif len(haps) == 2:
             called = [haps[0][0], haps[1][0]]
         else:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
-            called.append(self.reference)
-        return called, variants, len(haps)
+            if len(called) == 1:
+                called.append(self.reference)
+        return called, variants, len(haps), is_ref
     
     
     def lp_hap(self):
@@ -183,19 +186,20 @@ class Haplotype:
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
         # Define the haplotypes variable
-        haplotypes = [LpVariable(hap, cat = "Binary") for hap in self.haplotypes]
+        haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= 2) # Cannot choose more than two haplotypes
-        # Any CNV variants defined, if matched with a haplotype, MUST be used
-        # Otherwise, variants like CYP2D6*5 will be missed by the other methods
-        hap_prob += (lpSum(variants[i] for i in range(num_vars) if self.variants.iloc[i, 2] == "CNV") == num_sv)
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
             hap_prob += (variants[i] <= (lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))))
             # A given variant cannot be used more than "MATCH"
             hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) <= self.variants.iloc[i,1] * variants[i])
+            # Any CNV variants defined, if matched with a haplotype, MUST be used
+            # Otherwise, variants like CYP2D6*5 will be missed by the other methods
+            if self.variants.iloc[i,3] == "CNV":
+                hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) == self.variants.iloc[i,1])
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
@@ -205,18 +209,21 @@ class Haplotype:
             hap_prob.solve(GLPK(msg=0))
         else:
             hap_prob.solve()
-        called, variants, hap_len = self._haps_from_prob(hap_prob)
+        called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
         possible_haplotypes.append(tuple(called))
         haplotype_variants.append(tuple(variants))
         max_opt = hap_prob.objective.value()
         opt = max_opt
-        while opt >= max_opt:
+        while opt >= max_opt and not is_ref and hap_prob.status >= 0:
             hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
             hap_prob.solve()
             opt = hap_prob.objective.value()
-            called, variants, hap_len = self._haps_from_prob(hap_prob)
-            possible_haplotypes.append(tuple(called))
-            haplotype_variants.append(tuple(variants))
+            new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
+            if new_called == called:
+                break
+            called = new_called
+            possible_haplotypes.append(tuple(sorted(called)))
+            haplotype_variants.append(tuple(sorted(variants)))
         return possible_haplotypes, haplotype_variants
     
     def optimize_hap(self) -> ():
@@ -226,7 +233,6 @@ class Haplotype:
         Returns:
             (): Results
         """
-        possible_calls = []
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
@@ -235,6 +241,8 @@ class Haplotype:
         else:
             phased_haps = (".", ".")
         called, variants = self.lp_hap()
+        if len(called) > 1:
+            LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}, see output flat file for details.")
         return called, variants, phased_haps
     
     def get_max(self, d):

@@ -11,6 +11,9 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+import csv
+
+import numpy as np
 
 from pysam import VariantFile
 
@@ -65,8 +68,8 @@ def get_alleles(gene, subjects):
     ref = gene.reference
     alts = []
     for s in subjects:
-        subject_haps = [h for h in s.called_haplotypes[str(gene)]["HAPS"][1]]
-        alts += subject_haps
+        subject_haps = [h for h in s.called_haplotypes[str(gene)]["HAPS"][0]]
+        alts += np.array(subject_haps).flatten().tolist()
     try:
         alts = list(filter((ref).__ne__, alts))
     except ValueError:
@@ -82,10 +85,12 @@ def get_dosage(haps, alleles):
 def get_samples(gene_name, subjects, alleles):
     formats = []
     for s in subjects:
+        calls = s.called_haplotypes[gene_name]["HAPS"]
         formats.append(
             {
-                "GT": get_dosage(s.called_haplotypes[gene_name]["HAPS"][1], alleles),
-                "VA": s.called_haplotypes[gene_name]["HAPS"][2]
+                "GT": get_dosage(calls[0][0], alleles),
+                "VA": calls[1][0],
+                "HC": 1 / len(calls[0])
             }
         )
     return formats
@@ -114,3 +119,20 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
         )
         outfile.write(nr)
     outfile.close()
+
+def write_flat_file(directory: str, subjects: [], prefix):
+    lines = []
+    for subject in subjects:
+        for gene, haps in subject.called_haplotypes.items():
+            for i in range(len(haps["HAPS"][0])):
+                lines.append({
+                    "SUBJECT": str(subject),
+                    "GENE": gene,
+                    "GENOTYPE": "/".join(haps["HAPS"][0][i]),
+                    "VARIANTS": "|".join(haps["HAPS"][1][i]),
+                    "CONFIDENCE": 1 / len(haps["HAPS"][0])
+                })
+    with open(directory + f"/{prefix}.haplotypes.tsv", "w") as flat_out:
+        flat_file = csv.DictWriter(flat_out, ["SUBJECT", "GENE", "GENOTYPE", "VARIANTS", "CONFIDENCE"], delimiter = "\t")
+        flat_file.writeheader()
+        flat_file.writerows(lines)

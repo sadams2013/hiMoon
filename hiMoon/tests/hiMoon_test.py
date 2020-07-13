@@ -52,23 +52,8 @@ class TestSubject(unittest.TestCase):
 
     def test_subject_prefix(self):
         self.assertEqual(SUBJ.prefix, "NA12878")
-    
-    def test_called_haplotypes(self):
-        HAPS = sorted([i.split(".")[0] for i in SUBJ.called_haplotypes["CYP2D6"]["HAPS"][1]])
-        self.assertEqual(HAPS, sorted(["CYP2D6(star)3", "CYP2D6(star)4"]))
 
 class TestVCF(unittest.TestCase):
 
     def test_samples(self):
         self.assertEqual(VCF.samples[0], "HG00111")
-
-class TestHiMoon(unittest.TestCase):
-
-    def test_himoon(self):
-        haps = himoon.get_haps_from_vcf(
-            PATH + "/test_files/translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv",
-            PATH + "/test_files/vcf/test_samples.bcf",
-            "NA12878"
-        )
-        HAPS = sorted([i.split(".")[0] for i in haps[1]])
-        self.assertEqual(HAPS, sorted(["CYP2D6(star)3", "CYP2D6(star)4"]))

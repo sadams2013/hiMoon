@@ -65,11 +65,10 @@ def rm_sub_allele(allele: str) -> str:
 
 @parameterized.expand(prep_samples())
 def test_sample_haplotypes(subj, gene_obj, sample):
-    haps = sorted([rm_sub_allele(i) for i in subj.called_haplotypes[str(gene_obj)]["HAPS"][1]])
-    print(f"{sample['ID']} @ {str(gene_obj)} should be {'/'.join(sample['ALLELES'])}. Found {'/'.join(haps)}")
-    assert haps == sorted(sample["ALLELES"])
-
-
-if __name__ == "__main__":
-    test_sample_haplotypes()
+    possible_haplotypes = []
+    haps = subj.called_haplotypes[str(gene_obj)]["HAPS"][0]
+    for hap in haps:
+        possible_haplotypes.append(sorted([rm_sub_allele(a) for a in hap]))
+    print(f"{sample['ID']} @ {str(gene_obj)} should be {'/'.join(sample['ALLELES'])}. Found {possible_haplotypes}")
+    assert sorted(sample["ALLELES"]) in possible_haplotypes
     

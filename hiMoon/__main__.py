@@ -20,7 +20,7 @@ import csv
 
 from .subject import Subject
 from .gene import AbstractGene
-from .vcf import VarFile, write_variant_file
+from .vcf import VarFile, write_variant_file, write_flat_file
 
 from . import LOGGING, CONFIG, set_config, set_logging_info
 
@@ -89,6 +89,7 @@ def main() -> None:
     subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_variant_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
+    write_flat_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"))
 
 if __name__ == "__main__": 
     main()
