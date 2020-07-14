@@ -104,6 +104,7 @@ class ConfigData:
         self._iupac_codes()
         self._variant_query_params()
         self._missing_params()
+        self._lp_params()
     
     def _chromosome_accessions(self) -> None:
         """
