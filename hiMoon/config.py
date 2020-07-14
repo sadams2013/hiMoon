@@ -153,7 +153,16 @@ class ConfigData:
                 "missing_variants": 99
             }
             self.config["MISSING DATA PARAMETERS"] = self.MISSING_DATA_PARAMETERS
-
+    
+    def _lp_params(self) -> None:
+        try:
+            self.LP_PARAMS = self.config["LINEAR PROGRAM PARAMETERS"]
+        except KeyError:
+            self.LP_PARAMS = {
+                "optimal_decay": 0,
+                "max_haps": 2
+            }
+            self.config["LINEAR PROGRAM PARAMETERS"] = self.LP_PARAMS
     
     def write_config(self, config_path: str) -> None:
         """

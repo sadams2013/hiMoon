@@ -29,6 +29,8 @@ LOGGING.getLogger().setLevel(LOGGING.WARNING)
 def set_logging_info():
     LOGGING.getLogger().setLevel(LOGGING.INFO)
 
+CONFIG = None
+
 def set_config(config_path: str = None):
     """
     Set a custom config based on a path
