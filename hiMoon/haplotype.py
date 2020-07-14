@@ -135,13 +135,13 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
         if vcf_geno == ["-", "-"]:
-            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
