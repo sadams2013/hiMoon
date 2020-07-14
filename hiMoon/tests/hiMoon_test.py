@@ -18,24 +18,25 @@ import os
 
 import pandas as pd
 
-from hiMoon import gene, vcf, subject, config, himoon
+from hiMoon import gene, vcf, subject, config, himoon, get_config
+
+CONFIG = get_config()
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 VCF = vcf.VarFile(PATH + "/test_files/vcf/test_samples.bcf")
 CYP2D6_TABLE = PATH + "/test_files/translation_tables/CYP2D6.NC_000022.11.haplotypes.tsv"
-GENE = gene.AbstractGene(CYP2D6_TABLE, vcf = VCF)
-SUBJ = subject.Subject("NA12878", genes = [GENE])
+GENE = gene.AbstractGene(CYP2D6_TABLE, vcf = VCF, config = CONFIG)
+SUBJ = subject.Subject("NA12878", genes = [GENE], config = CONFIG)
 
 class TestConfig(unittest.TestCase):
 
     def test_load(self):
-        conf = config.ConfigData(PATH + "/test_files/config.ini")
+        conf = get_config(PATH + "/test_files/config.ini")
         assert conf.CHROMOSOME_ACCESSIONS["TESTCHROM"] == "testvalue"
     
     def test_dummy_file(self):
-        conf = config.ConfigData()
-        assert conf.CHROMOSOME_ACCESSIONS["NC_000001.11"] == "1"
+        assert CONFIG.CHROMOSOME_ACCESSIONS["NC_000001.11"] == "1"
 
 class TestGene(unittest.TestCase):
 

@@ -22,9 +22,9 @@ from .subject import Subject
 from .gene import AbstractGene
 from .vcf import VarFile, write_variant_file, write_flat_file
 
-from . import LOGGING, CONFIG, set_config, set_logging_info
+from . import LOGGING, get_config, set_logging_info
 
-def get_vcf_genes(args) -> ([AbstractGene], VarFile):
+def get_vcf_genes(args, CONFIG) -> ([AbstractGene], VarFile):
     """
     Prep VCF and gene objects
 
@@ -34,14 +34,14 @@ def get_vcf_genes(args) -> ([AbstractGene], VarFile):
     Returns:
         Tuple
     """
-    vcf = VarFile(args["vcf_file"], args["sample"])
+    vcf = VarFile(args["vcf_file"], args["sample"], config = CONFIG)
     genes = []
     solver = args["solver"]
     if args["translation_tables"][-3:] == "tsv":
-        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver))
+        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver, config = CONFIG))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver))
+            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver, config = CONFIG))
     return vcf, genes
 
 def main() -> None:
@@ -70,7 +70,7 @@ def main() -> None:
     args = vars(parser.parse_args())
     if args["config_file"] ==  "default":
         LOGGING.warning("Writing default config file and exiting")
-        CONFIG.write_config("himoon_config.ini")
+        get_config().write_config("himoon_config.ini")
         sys.exit(0)
 
     if args["translation_tables"] is None:
@@ -78,10 +78,9 @@ def main() -> None:
         sys.exit(1)
     if args["loglevel_info"]:
         set_logging_info()
-    if args["config_file"]:
-        set_config(args["config_file"])
-    vcf, genes = get_vcf_genes(args)
-    subjects = [Subject(prefix = sub_id, genes = genes) for sub_id in vcf.samples]
+    CONFIG = get_config(args["config_file"])
+    vcf, genes = get_vcf_genes(args, CONFIG)
+    subjects = [Subject(prefix = sub_id, genes = genes, config = CONFIG) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
     write_variant_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
     write_flat_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"))

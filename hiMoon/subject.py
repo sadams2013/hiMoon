@@ -20,18 +20,19 @@ from . import LOGGING
 
 class Subject:
 
-    def __init__(self, prefix: str, genes: [AbstractGene]) -> None:
+    def __init__(self, prefix: str, genes: [AbstractGene], config = None) -> None:
         """Subject object - manages data and functions for a single sample in a VCF file
         
         Args:
             prefix (str): Subject ID (comes from the VCF file)
             genes ([Gene]): List of gene.Gene objects
         """
+        self.config = config
         self.prefix = prefix
         self.called_haplotypes = {}
         for gene in genes:
             try:
-                haplotype = Haplotype(gene, self.prefix)
+                haplotype = Haplotype(gene, self.prefix, self.config)
                 haplotype.table_matcher()
                 self.called_haplotypes[str(gene)] = {
                     "HAPS": haplotype.optimize_hap(),

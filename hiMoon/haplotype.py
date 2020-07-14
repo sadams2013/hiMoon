@@ -20,14 +20,14 @@ import numpy as np
 
 from pulp import *
 from .gene import AbstractGene
-from . import CONFIG, LOGGING
+from . import LOGGING
 
 class NoVariantsException(Exception):
     pass
 
 class Haplotype:
 
-    def __init__(self, gene: AbstractGene, sample_prefix: str) -> None:
+    def __init__(self, gene: AbstractGene, sample_prefix: str, config = None) -> None:
         """
         Create a new haplotype object
         This object is not a subclass, but inherits data from the Gene class
@@ -38,6 +38,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
+        self.config = config
         self.solver = gene.solver
         self.matched = False
         self.sample_prefix = sample_prefix
@@ -110,7 +111,7 @@ class Haplotype:
             return [f'id-']
         else:
             try:
-                return [f's{a}' for a in CONFIG.IUPAC_CODES[alt]]
+                return [f's{a}' for a in self.config.IUPAC_CODES[alt]]
             except KeyError:
                 return [f's{alt}']
 
@@ -134,13 +135,13 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
         if vcf_geno == ["-", "-"]:
-            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
+            return self.config.MISSING_DATA_PARAMETERS["missing_variants"], strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
@@ -190,7 +191,7 @@ class Haplotype:
         haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
-        hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= CONFIG.LP_PARAMS["max_haps"]) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
+        hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= self.config.LP_PARAMS["max_haps"]) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
         # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
@@ -215,7 +216,7 @@ class Haplotype:
         haplotype_variants.append(tuple(variants))
         max_opt = hap_prob.objective.value()
         opt = max_opt
-        while opt >= (max_opt - CONFIG.LP_PARAMS["optimal_decay"]) and not is_ref and hap_prob.status >= 0:
+        while opt >= (max_opt - self.config.LP_PARAMS["optimal_decay"]) and not is_ref and hap_prob.status >= 0:
             hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
             hap_prob.solve()
             opt = hap_prob.objective.value()

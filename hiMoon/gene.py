@@ -15,7 +15,7 @@
 import pandas as pd
 import sys
 
-from . import LOGGING, CONFIG
+from . import LOGGING
 from .vcf import VarFile
 
 class AbstractGene:
@@ -26,21 +26,22 @@ class AbstractGene:
 
     def __init__(self, translation_table: str, vcf: VarFile = None, 
                     variants = None, solver: str = "CBC", 
-                    phased_matcher: bool = False) -> None:
+                    phased_matcher: bool = False, config = None) -> None:
         """Create a Gene object
         
         Args:
             translation_table (str): path to translation table
             vcf (VarFile): parsed VCF object from vcf.VarFile
         """
+        self.config = config
         self.phased_matcher = phased_matcher
         self.solver = solver
         self.gene = None
         self.accession = None
         self.read_translation_table(translation_table)
         self.gene = self.translation_table.iloc[-1, 1]
-        self.max = self.translation_table.iloc[:,5].dropna().max() + int(CONFIG.VARIANT_QUERY_PARAMETERS["5p_offset"])
-        self.min = self.translation_table.iloc[:,4].dropna().min() - int(CONFIG.VARIANT_QUERY_PARAMETERS["3p_offset"])
+        self.max = self.translation_table.iloc[:,5].dropna().max() + int(self.config.VARIANT_QUERY_PARAMETERS["5p_offset"])
+        self.min = self.translation_table.iloc[:,4].dropna().min() - int(self.config.VARIANT_QUERY_PARAMETERS["3p_offset"])
         if vcf:
             self.variants = vcf.get_range(self.chromosome, self.min, self.max)
         else:
@@ -174,6 +175,6 @@ class AbstractGene:
             self.reference = "REF"
         self.translation_table = self.translation_table[self.translation_table["ReferenceSequence"] != "."]
         self.accession = self.translation_table.iloc[-1, 3]
-        self.chromosome = CONFIG.CHROMOSOME_ACCESSIONS[self.accession]
+        self.chromosome = self.config.CHROMOSOME_ACCESSIONS[self.accession]
         self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
         self.translation_table["EXCLUDE"] = 0

@@ -29,18 +29,15 @@ LOGGING.getLogger().setLevel(LOGGING.WARNING)
 def set_logging_info():
     LOGGING.getLogger().setLevel(LOGGING.INFO)
 
-CONFIG = None
-
-def set_config(config_path: str = None):
+def get_config(config_path: str = None):
     """
     Set a custom config based on a path
     Args:
         config_path ([type]): path/to/config/file.ini
     """
-    global CONFIG
     if config_path:
-        CONFIG = ConfigData(config_path)
+        return(ConfigData(config_path))
     else:
-        CONFIG = ConfigData()
+        return(ConfigData())
 
-set_config()   
+
