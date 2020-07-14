@@ -26,16 +26,19 @@ from .config import ConfigData
 # Initialize logger
 LOGGING.getLogger().setLevel(LOGGING.WARNING)
 
-# Initialize config
-CONFIG = ConfigData()
-
 def set_logging_info():
     LOGGING.getLogger().setLevel(LOGGING.INFO)
 
-def set_config(config_path):
+def set_config(config_path: str = None):
     """
     Set a custom config based on a path
     Args:
         config_path ([type]): path/to/config/file.ini
     """
-    CONFIG = ConfigData(config_path)
+    global CONFIG
+    if config_path:
+        CONFIG = ConfigData(config_path)
+    else:
+        CONFIG = ConfigData()
+
+set_config()   
