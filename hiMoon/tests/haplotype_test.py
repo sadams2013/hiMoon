@@ -46,7 +46,7 @@ def prep_samples() -> []:
         sample_alleles = load_definition_file(definition_file)
         vcf_file = vcf.VarFile(PATH + "/test_files/" + sample_alleles["VCF"])
         gene_obj = gene.AbstractGene(PATH + "/test_files/" + sample_alleles["TRANSLATION_TABLE"], vcf = vcf_file, config = CONFIG)
-        gene_samples += [(subject.Subject(sample["ID"], genes = [gene_obj], config= CONFIG), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
+        gene_samples += [(subject.Subject(sample["ID"], genes = [gene_obj], config = CONFIG), gene_obj, sample) for sample in sample_alleles["SAMPLES"]]
     return(gene_samples)
 
 def rm_sub_allele(allele: str) -> str:
