@@ -103,6 +103,7 @@ class ConfigData:
         self._chromosome_accessions()
         self._iupac_codes()
         self._variant_query_params()
+        self._missing_params()
     
     def _chromosome_accessions(self) -> None:
         """
@@ -124,7 +125,6 @@ class ConfigData:
         try:
             self.IUPAC_CODES = {code.upper(): list(nucleotides) for code, nucleotides in self.config["IUPAC CODES"].items()}
         except KeyError:
-            self.update_config = True
             LOGGING.info("IUPAC Codes set to default values.")
             self.IUPAC_CODES = IUPAC_CODES
             self.config["IUPAC CODES"] = {code: "".join(nucleotides) for code, nucleotides in self.IUPAC_CODES.items()}
@@ -137,13 +137,23 @@ class ConfigData:
         try:
             self.VARIANT_QUERY_PARAMETERS = self.config["VARIANT QUERY PARAMETERS"]
         except KeyError:
-            self.update_config = True
             LOGGING.info("Using a 1kb 5' and 3' offset.")
             self.VARIANT_QUERY_PARAMETERS = {
                 "5p_offset": 1000,
                 "3p_offset": 1000
             }
             self.config["VARIANT QUERY PARAMETERS"] = self.VARIANT_QUERY_PARAMETERS
+    
+    def _missing_params(self) -> None:
+        try:
+            self.MISSING_DATA_PARAMETERS = self.config["MISSING DATA PARAMETERS"]
+        except KeyError:
+            LOGGING.info("Missing variants will be assumed to match reference")
+            self.MISSING_DATA_PARAMETERS = {
+                "missing_variants": 99
+            }
+            self.config["MISSING DATA PARAMETERS"] = self.MISSING_DATA_PARAMETERS
+
     
     def write_config(self, config_path: str) -> None:
         """

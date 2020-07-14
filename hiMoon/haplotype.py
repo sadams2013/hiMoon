@@ -134,13 +134,13 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return 99, strand
+            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return 99, strand
+            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
         if vcf_geno == ["-", "-"]:
-            return 99, strand
+            return CONFIG.MISSING_DATA_PARAMETERS["missing_variants"], strand
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
@@ -239,7 +239,7 @@ class Haplotype:
             sys.exit(1)
         called, variants = self.lp_hap()
         if len(called) > 1:
-            LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}, see output flat file for details.")
+            LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
         return called, variants
     
     def get_max(self, d):
