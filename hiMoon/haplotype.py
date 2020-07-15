@@ -176,7 +176,6 @@ class Haplotype:
     def lp_hap(self):
         possible_haplotypes = []
         haplotype_variants = []
-        svs = self.variants[self.variants["Type"] == "CNV"]
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
         
@@ -205,8 +204,9 @@ class Haplotype:
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
-                self.translation_table.iloc[:,0] == self.haplotypes[i]
-                ]["MATCH"].sum() * haplotypes[i] for i in range(num_haps))
+                (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
+                (self.translation_table["MATCH"] > 0)
+                ].shape[0] * haplotypes[i] for i in range(num_haps))
         if self.solver == "GLPK":
             hap_prob.solve(GLPK(msg=0))
         else:

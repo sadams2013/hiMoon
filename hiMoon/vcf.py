@@ -23,7 +23,7 @@ from . import LOGGING
 
 
 class VarFile:
-    def __init__(self, vcf_file: str, sample: str = None, vcf_file_index: str = None) -> None:
+    def __init__(self, vcf_file: str, sample: str = None, vcf_file_index: str = None, config = None) -> None:
         """VarFile object, basically a wrapper for pysam VariantFile
         
         Args:
