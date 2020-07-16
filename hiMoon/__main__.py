@@ -38,10 +38,10 @@ def get_vcf_genes(args, CONFIG) -> ([AbstractGene], VarFile):
     genes = []
     solver = args["solver"]
     if args["translation_tables"][-3:] == "tsv":
-        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver, config = CONFIG))
+        genes.append(AbstractGene(os.path.abspath(args["translation_tables"]), vcf, solver = solver, config = CONFIG, phased = args["phased"]))
     else:
         for translation_table in glob.glob(args["translation_tables"] + "/*.tsv"):
-            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver, config = CONFIG))
+            genes.append(AbstractGene(os.path.abspath(translation_table), vcf, solver = solver, config = CONFIG, phased = args["phased"]))
     return vcf, genes
 
 def main() -> None:
@@ -66,6 +66,9 @@ def main() -> None:
     parser.add_argument("-S", "--solver",
                         help="Solver to use (GLPK or CBC), default = CBC",
                         default="CBC")
+    parser.add_argument("-P", "--phased",
+                        help="Use phased constraint in LP",
+                        action="store_true")
     
     args = vars(parser.parse_args())
     if args["config_file"] ==  "default":

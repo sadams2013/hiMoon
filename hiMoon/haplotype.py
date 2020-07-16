@@ -38,6 +38,7 @@ class Haplotype:
             gene (Gene): gene.Gene object
             sample_prefix (str): Sample ID 
         """
+        self.phased = gene.phased
         self.config = config
         self.solver = gene.solver
         self.matched = False
@@ -178,7 +179,6 @@ class Haplotype:
         haplotype_variants = []
         num_vars = self.variants.shape[0]
         num_haps = len(self.haplotypes)
-        
         hap_vars = []
         for hap in self.haplotypes:
             trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
@@ -187,7 +187,7 @@ class Haplotype:
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
 
         # Define the haplotypes and variants variables
-        haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
+        haplotypes = [LpVariable(hap, cat = "Binary") for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
@@ -201,6 +201,9 @@ class Haplotype:
             # Otherwise, variants like CYP2D6*5 will be missed by the other methods
             if self.variants.iloc[i,3] == "CNV":
                 hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) == self.variants.iloc[i,1])
+        if self.phased:
+            for i in range(num_haps):
+                hap_prob += lpSum(haplotypes[i] * self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique().size) <= 1
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[

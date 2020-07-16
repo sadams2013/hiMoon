@@ -20,7 +20,7 @@ from . import get_config
 
 def get_haps_from_vcf(translation_table_path: str, vcf_file_path: str, 
                         sample_id: str, solver: str = "CBC", 
-                        config_path: str = None) -> tuple:
+                        config_path: str = None, phased = False) -> tuple:
     """
     Provide a VCF file, sample ID, and translation table
     Get called haplotypes and additional information
@@ -36,14 +36,14 @@ def get_haps_from_vcf(translation_table_path: str, vcf_file_path: str,
     """
     config = get_config(config_path)
     vcf = VarFile(vcf_file_path, sample_id)
-    gene = AbstractGene(translation_table_path, vcf = vcf, solver = solver, config = config)
+    gene = AbstractGene(translation_table_path, vcf = vcf, solver = solver, config = config, phased = phased)
     haplotype = Haplotype(gene, sample_id, config = config)
     haplotype.table_matcher()
     return haplotype.optimize_hap()
 
 def get_haps_from_variants(translation_table_path: str, vcf_data: str, 
                             sample_id: str, solver: str = "CBC", 
-                            config_path: str = None) -> tuple:
+                            config_path: str = None, phased = False) -> tuple:
     """
     Same as get_haps_from_vcf, but bypasses the VCF file so that you can provide formatted variants from another input
     Get called haplotypes and additional information
@@ -58,7 +58,7 @@ def get_haps_from_variants(translation_table_path: str, vcf_data: str,
         tuple: translation_table_version, called_haplotypes, variants_associated_with_haplotye, matched_translation_table
     """
     config = get_config(config_path)
-    gene = AbstractGene(translation_table_path, variants = vcf_data, solver = solver, config = config)
+    gene = AbstractGene(translation_table_path, variants = vcf_data, solver = solver, config = config, phased = phased)
     haplotype = Haplotype(gene, sample_id, config = config)
     haplotype.table_matcher()
     return haplotype.optimize_hap()
