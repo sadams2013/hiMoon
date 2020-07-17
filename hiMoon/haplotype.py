@@ -187,7 +187,7 @@ class Haplotype:
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
 
         # Define the haplotypes and variants variables
-        haplotypes = [LpVariable(hap, cat = "Binary") for hap in self.haplotypes]
+        haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
@@ -215,22 +215,33 @@ class Haplotype:
             hap_prob.solve(GLPK(msg=0))
         else:
             hap_prob.solve()
-        called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
-        possible_haplotypes.append(tuple(called))
-        haplotype_variants.append(tuple(variants))
-        max_opt = hap_prob.objective.value()
-        opt = max_opt
-        while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
-            hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
-            hap_prob.solve()
-            opt = hap_prob.objective.value()
-            new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
-            if new_called == called or len(new_called) == 0:
-                break
-            called = new_called
-            possible_haplotypes.append(tuple(sorted(called)))
-            haplotype_variants.append(tuple(sorted(variants)))
-        return possible_haplotypes, haplotype_variants
+        if hap_prob.status != 1:
+            if self.phased:
+                LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be re-attempted with phasing off.")
+                self.phased = False
+                return None, None
+            else:
+                LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be called")
+                return [], []
+        else:
+            called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
+            possible_haplotypes.append(tuple(called))
+            haplotype_variants.append(tuple(variants))
+            max_opt = hap_prob.objective.value()
+            opt = max_opt
+            while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
+                hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
+                hap_prob.solve()
+                if hap_prob.status != 0:
+                    break
+                opt = hap_prob.objective.value()
+                new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
+                if new_called == called or len(new_called) == 0:
+                    break
+                called = new_called
+                possible_haplotypes.append(tuple(sorted(called)))
+                haplotype_variants.append(tuple(sorted(variants)))
+            return possible_haplotypes, haplotype_variants
     
     def _get_strand_constraint(self, i, default):
         sc = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique()
@@ -249,6 +260,9 @@ class Haplotype:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
         called, variants = self.lp_hap()
+        if called is None:
+            # Happens when a phased call attempt fails
+            called, variants = self.lp_hap()
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
         return called, variants

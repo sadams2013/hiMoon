@@ -6,11 +6,6 @@ SAMPLES:
   ID: HG00276
   NOTES: '*4/*5'
 - ALLELES:
-  - CYP2D6(star)2x2
-  - CYP2D6(star)22
-  ID: HG00337
-  NOTES: '*2x2/*22'
-- ALLELES:
   - CYP2D6(star)5
   - CYP2D6(star)5
   ID: NA19317

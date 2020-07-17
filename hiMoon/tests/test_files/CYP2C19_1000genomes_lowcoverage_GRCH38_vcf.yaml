@@ -1,7 +1,7 @@
 GENE: CYP2C19
 SAMPLES:
 - ALLELES:
-  - CYP2C19(star)1
+  - CYP2C19(star)19
   - CYP2C19(star)19
   ID: NA12003
   NOTES: '*1/*1'
