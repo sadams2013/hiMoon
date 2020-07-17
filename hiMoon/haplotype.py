@@ -203,7 +203,8 @@ class Haplotype:
                 hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) == self.variants.iloc[i,1])
         if self.phased:
             for i in range(num_haps):
-                hap_prob += lpSum(haplotypes[i] * self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique().size) <= 1
+                hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, []).size) <= 1 # max one strand
+            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) == 3
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
@@ -231,6 +232,12 @@ class Haplotype:
             haplotype_variants.append(tuple(sorted(variants)))
         return possible_haplotypes, haplotype_variants
     
+    def _get_strand_constraint(self, i, default):
+        sc = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique()
+        sc = np.delete(sc, np.where(sc == [3]))
+        return(sc if sc.size > 0 else np.array(default))
+
+
     def optimize_hap(self) -> ():
         """
         Solve for the most likely diplotype
