@@ -217,7 +217,7 @@ class Haplotype:
             hap_prob.solve()
         if hap_prob.status != 1:
             if self.phased:
-                LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be re-attempted with phasing off.")
+                LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will be re-attempted with phasing off.")
                 self.phased = False
                 return None, None
             else:
@@ -227,6 +227,8 @@ class Haplotype:
             called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
             possible_haplotypes.append(tuple(called))
             haplotype_variants.append(tuple(variants))
+            if is_ref:
+                return possible_haplotypes, haplotype_variants
             max_opt = hap_prob.objective.value()
             opt = max_opt
             while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
@@ -243,6 +245,7 @@ class Haplotype:
                 haplotype_variants.append(tuple(sorted(variants)))
             return possible_haplotypes, haplotype_variants
     
+
     def _get_strand_constraint(self, i, default):
         sc = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique()
         sc = np.delete(sc, np.where(sc == [3]))
@@ -282,30 +285,4 @@ class Haplotype:
             return max_keys
         except:
             return [self.reference]
-    
-    # def phased_optimize(self):
-    #     """
-    #     Runs the phased haplotype matchers
-    #     """
-    #     strand1_haps = {}
-    #     strand2_haps = {}
-    #     for haplotype in self.haplotypes:
-    #         hap_table = self.translation_table[self.translation_table["Haplotype Name"] == haplotype]
-    #         if len(hap_table["STRAND"].unique()) == 1:
-    #             if hap_table["STRAND"].unique()[0] == 1:
-    #                 strand1_haps[haplotype] = len(hap_table)
-    #             elif hap_table["STRAND"].unique()[0] == 2:
-    #                 strand2_haps[haplotype] = len(hap_table)
-    #     print(strand1_haps)
-    #     s1 = self.get_max(strand1_haps)
-    #     s2 = self.get_max(strand2_haps)
-    #     combinations = []
-    #     perms = itertools.permutations(s1, len(s2))
-    #     for perm in perms:
-    #         zipped = zip(perm, s2)
-    #         combinations.append(list(zipped))
-    #     print(s1)
-    #     print(s2)
-    #     print(combinations)
-    #     return list(itertools.product(s1, s2))
       
