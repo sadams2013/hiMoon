@@ -146,7 +146,7 @@ class Haplotype:
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
-            strand = max([vcf_geno.index(a) for a in tt_alt_geno]) + 1
+            strand = 1 if max([vcf_geno.index(a) for a in tt_alt_geno]) == 1 else -1
         elif alt_matches == 2 and genotype["phased"]:
             strand = 3
         return alt_matches, strand
@@ -204,7 +204,8 @@ class Haplotype:
         if self.phased:
             for i in range(num_haps):
                 hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, []).size) <= 1 # max one strand
-            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) == 3
+            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) <= 1
+            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) >= -1
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
