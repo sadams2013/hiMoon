@@ -46,7 +46,7 @@ def get_vcf_genes(args, CONFIG) -> ([AbstractGene], VarFile):
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Match haplotypes, return raw data and/or reports.", prog="hiMoon")
+                        description="Match haplotypes, return raw data and/or reports.", prog="hiMoon")
     parser.add_argument("vcf_file", help="path/to/vcf file", nargs="?")
     parser.add_argument("-t", "--translation-tables",
                         help="Directory with translation tables or a single translation table file", 

@@ -27,7 +27,8 @@ class AbstractGene:
     def __init__(self, translation_table: str, vcf: VarFile = None, 
                     variants = None, solver: str = "CBC",
                     config = None, phased = False) -> None:
-        """Create a Gene object
+        """
+        Create a Gene object
         
         Args:
             translation_table (str): path to translation table
@@ -54,13 +55,15 @@ class AbstractGene:
         return self.gene
     
     def get_sample_vars(self, sample: str) -> dict:
-        """[summary]
+        """
+        The gene contains variants for all samples in the VCF
+        This function parses variants for a single sample. 
 
         Args:
-            sample (str): [description]
+            sample (str): sample ID
 
         Returns:
-            dict: [description]
+            dict: single sample variants from VCF
         """
         sample_vars = {}
         for var_id, sub_vars in self.variants.items():
@@ -121,8 +124,17 @@ class AbstractGene:
         added_rows = pd.DataFrame(new_rows)
         return pd.concat([new_table, added_rows, cnv_table], ignore_index=True)
 
-    def get_type(self, vtype):
-        return 'CNV' if vtype == "CNV" else "SID"
+    def get_type(self, vtype: str) -> str:
+        """
+        Simple helper function to assign a CNV type if a variant is not SID
+
+        Args:
+            vtype (str): SID or CNV
+
+        Returns:
+            str: CNV if CNV, else SID
+        """
+        return "CNV" if vtype == "CNV" else "SID"
 
     def read_translation_table(self, translation_table: str) -> pd.DataFrame:
         """Read and process a translation table
@@ -178,3 +190,4 @@ class AbstractGene:
         self.chromosome = self.config.CHROMOSOME_ACCESSIONS[self.accession]
         self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
         self.translation_table["EXCLUDE"] = 0
+        

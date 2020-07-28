@@ -23,6 +23,9 @@ from .gene import AbstractGene
 from . import LOGGING
 
 class NoVariantsException(Exception):
+    """
+    Exception to call if a sample is attempted that has zero variants defined. 
+    """
     pass
 
 class Haplotype:
@@ -75,7 +78,8 @@ class Haplotype:
         self.haplotypes = [hap for hap in self.translation_table.iloc[:,0].unique().tolist()] # List of possible haplotypes
 
     def _mod_vcf_record(self, alt: str, ref: str) -> str:
-        """Modifies record from VCF to standardized form
+        """
+        Modifies record from VCF to standardized form
         
         Args:
             alt (str): alt allele
@@ -96,7 +100,8 @@ class Haplotype:
             return f's{alt}'
 
     def _mod_tt_record(self, var_type: str, alt: str) -> list:
-        """Modifies the translation table ref to a standardized form
+        """
+        Modifies the translation table ref to a standardized form
         
         Args:
             var_type (str): insertion, deletion, or substitution
@@ -151,7 +156,17 @@ class Haplotype:
             strand = 3
         return alt_matches, strand
     
-    def _haps_from_prob(self, lp_problem):
+    def _haps_from_prob(self, lp_problem: object) -> tuple:
+        """
+        Take a optimally solved lp problem
+        Produce called haplotypes
+
+        Args:
+            lp_problem (object): solved lp problem
+
+        Returns:
+            tuple: called haplotypes and associated information
+        """
         is_ref = False
         haps = []
         variants = []
@@ -174,7 +189,13 @@ class Haplotype:
         return called, variants, len(haps), is_ref
     
     
-    def lp_hap(self):
+    def lp_hap(self) -> tuple:
+        """
+        Build and run the LP problem
+
+        Returns:
+            tuple: list of possible haplotypes and list of associated variants
+        """
         possible_haplotypes = []
         haplotype_variants = []
         num_vars = self.variants.shape[0]
@@ -247,7 +268,18 @@ class Haplotype:
             return possible_haplotypes, haplotype_variants
     
 
-    def _get_strand_constraint(self, i, default):
+    def _get_strand_constraint(self, i: int, default: list) -> list:
+        """
+        Helps to assemble the constraint for phased data
+        Looks at all strands that are part of a haplotype
+        Removes homozygous calls
+        Args:
+            i (int): haplotype index
+            default (list): default return if nothing matches or if all are homozygous
+
+        Returns:
+            list: [description]
+        """
         sc = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique()
         sc = np.delete(sc, np.where(sc == [3]))
         return(sc if sc.size > 0 else np.array(default))
@@ -270,20 +302,4 @@ class Haplotype:
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
         return called, variants
-    
-    def get_max(self, d):
-        """
-
-        Args:
-            d ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        try:
-            max_value = max(d.values())  # maximum value
-            max_keys = [k for k, v in d.items() if v == max_value]
-            return max_keys
-        except:
-            return [self.reference]
       

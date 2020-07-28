@@ -24,7 +24,8 @@ from . import LOGGING
 
 class VarFile:
     def __init__(self, vcf_file: str, sample: str = None, vcf_file_index: str = None, config = None) -> None:
-        """VarFile object, basically a wrapper for pysam VariantFile
+        """
+        VarFile object, basically a wrapper for pysam VariantFile
         
         Args:
             vcf_file (str): path to VCF/VCF.GZ/BCF file (needs to be indexed)
@@ -37,7 +38,8 @@ class VarFile:
         self.vcf_file.subset_samples(self.samples)
     
     def get_range(self, chrom: str, minloc: int, maxloc: int) -> dict:
-        """Returns a range of variants for all samples in a VCF file
+        """
+        Returns a range of variants for all samples in a VCF file
         
         Args:
             chrom (str): chromosome
@@ -64,7 +66,17 @@ class VarFile:
                     "alleles": tuple(position.samples[sample].alleles), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
         return positions_out
 
-def get_alleles(gene, subjects):
+def get_alleles(gene: object, subjects: list) -> list:
+    """
+    Prep for the ref/alt columns in a VCF
+
+    Args:
+        gene (Gene): gene object
+        subjects (list): list of subjects
+
+    Returns:
+        list: list of all possible alt alleles
+    """
     ref = gene.reference
     alts = []
     for s in subjects:
@@ -78,11 +90,31 @@ def get_alleles(gene, subjects):
         alts = ["NON_REF"]
     return([ref] + list(set(alts)))
 
-def get_dosage(haps, alleles):
+def get_dosage(haps: list, alleles: list) -> list:
+    """
+    Get index for GT fiels for a given sample
+
+    Args:
+        haps (list): possible haplotypes
+        alleles (list): alleles
+
+    Returns:
+        list: sample dosages for each allele
+    """
     return [alleles.index(s) for s in haps]
 
+def get_samples(gene_name: str, subjects: list, alleles: list) -> list:
+    """
+    Generate the sample/format field for each sample in the multi-sample output VCF
 
-def get_samples(gene_name, subjects, alleles):
+    Args:
+        gene_name (str): gene name
+        subjects (list): list of subjects to be written
+        alleles (list): subject alleles
+
+    Returns:
+        list: list of format field for each each sample
+    """
     formats = []
     for s in subjects:
         calls = s.called_haplotypes[gene_name]["HAPS"]
@@ -96,7 +128,16 @@ def get_samples(gene_name, subjects, alleles):
     return formats
 
 
-def write_variant_file(directory: str, subjects: [], prefix, genes):
+def write_variant_file(directory: str, subjects: [], prefix: str, genes: list) -> None:
+    """
+    Write the output VCF file
+
+    Args:
+        directory (str): output directory
+        subjects ([type]): list of subjects
+        prefix (str): prefix for filename
+        genes (list): list of gene objects
+    """
     contigs = list(set([f"chr{gene.chromosome.strip('chr')}" for gene in genes]))
     template = VariantFile(PATH + "/template.vcf", "r")
     outfile = VariantFile(directory+f"/{prefix}.haplotypes.vcf", "w", header = template.header)
@@ -120,7 +161,15 @@ def write_variant_file(directory: str, subjects: [], prefix, genes):
         outfile.write(nr)
     outfile.close()
 
-def write_flat_file(directory: str, subjects: [], prefix):
+def write_flat_file(directory: str, subjects: [], prefix: str) -> None:
+    """
+    Writes the output flat file
+
+    Args:
+        directory (str): output directory
+        subjects ([type]): list of subjects
+        prefix (str): prefix for filename
+    """
     lines = []
     for subject in subjects:
         for gene, haps in subject.called_haplotypes.items():

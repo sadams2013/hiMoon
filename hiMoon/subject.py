@@ -21,7 +21,8 @@ from . import LOGGING
 class Subject:
 
     def __init__(self, prefix: str, genes: [AbstractGene], config = None) -> None:
-        """Subject object - manages data and functions for a single sample in a VCF file
+        """
+        Subject object - manages data and functions for a single sample in a VCF file
         
         Args:
             prefix (str): Subject ID (comes from the VCF file)
