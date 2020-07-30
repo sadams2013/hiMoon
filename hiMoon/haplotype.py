@@ -88,10 +88,10 @@ class Haplotype:
         Returns:
             str: reformatted alt allele
         """
-        if "<" in alt:
-            return f"s{alt.strip('<>')}"
         if alt is None:
             return "-"
+        if "<" in alt:
+            return f"s{alt.strip('<>')}"
         elif len(ref) > len(alt):
             return "id-"
         elif len(ref) < len(alt):
@@ -188,6 +188,12 @@ class Haplotype:
                 called.append(self.reference)
         return called, variants, len(haps), is_ref
     
+    def _solve(self, hap_prob: object) -> object:
+        if self.solver == "GLPK":
+            hap_prob.solve(GLPK(msg=0))
+        else:
+            hap_prob.solve()
+
     
     def lp_hap(self) -> tuple:
         """
@@ -207,12 +213,14 @@ class Haplotype:
 
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
 
+        # TODO: Still assigning 0.5 sometimes and picks more than 2 haps
+
         # Define the haplotypes and variants variables
-        haplotypes = [LpVariable(hap, cat = "LpInteger", lowBound=0, upBound=2) for hap in self.haplotypes]
+        haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
-        # Limit alleles that can be chosen based on zygosity
+       # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
             hap_prob += (variants[i] <= (lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))))
@@ -230,13 +238,10 @@ class Haplotype:
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
-                (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
-                (self.translation_table["MATCH"] > 0)
+                    (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
+                    (self.translation_table["MATCH"] > 0)
                 ].shape[0] * haplotypes[i] for i in range(num_haps))
-        if self.solver == "GLPK":
-            hap_prob.solve(GLPK(msg=0))
-        else:
-            hap_prob.solve()
+        self._solve(hap_prob)
         if hap_prob.status != 1:
             if self.phased:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will be re-attempted with phasing off.")
@@ -255,8 +260,8 @@ class Haplotype:
             opt = max_opt
             while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
                 hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
-                hap_prob.solve()
-                if hap_prob.status != 0:
+                self._solve(hap_prob)
+                if hap_prob.status != 1:
                     break
                 opt = hap_prob.objective.value()
                 new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
