@@ -15,7 +15,7 @@
 __author__ = "Solomon M. Adams, PharmD, PhD"
 __copyright__ = "Copyright 2020, Solomon M. Adams"
 __license__ = "Apache v2.0"
-__version__ = "0.9"
+__version__ = "0.10"
 __maintainer__ = "Solomon M. Adams, PharmD, PhD"
 __email__ = "sadams07@su.edu"
 
