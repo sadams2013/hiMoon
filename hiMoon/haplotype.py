@@ -252,13 +252,15 @@ class Haplotype:
                 return [], []
         else:
             called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
-            possible_haplotypes.append(tuple(called))
-            haplotype_variants.append(tuple(variants))
             if is_ref:
+                possible_haplotypes.append(tuple(called))
+                haplotype_variants.append(tuple(variants))
                 return possible_haplotypes, haplotype_variants
             max_opt = hap_prob.objective.value()
             opt = max_opt
             while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
+                possible_haplotypes.append(tuple(sorted(called)))
+                haplotype_variants.append(tuple(sorted(variants)))
                 hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
                 self._solve(hap_prob)
                 if hap_prob.status != 1:
@@ -268,8 +270,7 @@ class Haplotype:
                 if new_called == called or len(new_called) == 0:
                     break
                 called = new_called
-                possible_haplotypes.append(tuple(sorted(called)))
-                haplotype_variants.append(tuple(sorted(variants)))
+
             return possible_haplotypes, haplotype_variants
     
 
