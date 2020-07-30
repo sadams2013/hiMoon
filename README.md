@@ -12,8 +12,9 @@ If you use this tool, you need to understand how it works and inherent limitatio
 ### Main Rules for Use
 
 1. Know your input data! hiMoon will work with what you give it, so Garbage In Garbage Out applies. 
-2. Function will be erratic until a 1.0 release (i.e. beta only), this is especially important for CYP2D6. 
-3. Validate with known samples + edge cases before using in any meaningful application. 
+2. Validate with known samples + edge cases before using in any meaningful application. 
+
+\*Function of hiMoon for named-haplotype calling is stable as of version 0.9. 
 
 **hiMoon is intended for research use only.**
 
