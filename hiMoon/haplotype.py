@@ -213,8 +213,6 @@ class Haplotype:
 
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
 
-        # TODO: Still assigning 0.5 sometimes and picks more than 2 haps
-
         # Define the haplotypes and variants variables
         haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
