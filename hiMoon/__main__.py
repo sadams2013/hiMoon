@@ -85,8 +85,9 @@ def main() -> None:
     vcf, genes = get_vcf_genes(args, CONFIG)
     subjects = [Subject(prefix = sub_id, genes = genes, config = CONFIG) for sub_id in vcf.samples]
     out_dir = args["output_directory"]
-    write_variant_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"), genes)
-    write_flat_file(out_dir, subjects, args["vcf_file"].split("/")[-1].strip(".vcf.gz").strip(".bcf"))
+    prefix = args["vcf_file"].split("/")[-1].replace(".vcf.gz", "").replace(".bcf", "")
+    write_variant_file(out_dir, subjects, prefix, genes)
+    write_flat_file(out_dir, subjects, prefix)
 
 if __name__ == "__main__": 
     main()
