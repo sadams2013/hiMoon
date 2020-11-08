@@ -37,6 +37,26 @@ class VarFile:
             self.samples = list(self.vcf_file.header.samples)
         self.vcf_file.subset_samples(self.samples)
     
+    def _get_alleles(self, sample, var_type):
+        """
+        Get alleles if coded as GT, catch if coded as CN (for CNV)
+        Will always assume that at least one allele is one copy (unless CN == 0)
+        Not necessarily accurate, but plain count data is inherently unphased so the distiction
+        between (for example) 1/3 vs 2/2 is arbitrary. 
+        """
+        alleles = sample.alleles
+        if len(alleles) == 0 and var_type == "CNV":
+            try:
+                cn = sample["CN"]
+                if cn == 0:
+                    alleles = (0, 0)
+                else:
+                    alleles = (1, cn - 1) #TODO this in untested
+            except KeyError:
+                alleles = None # This is probably going to cause an issue eventually
+        return alleles
+
+
     def get_range(self, chrom: str, minloc: int, maxloc: int) -> dict:
         """
         Returns a range of variants for all samples in a VCF file
@@ -63,9 +83,9 @@ class VarFile:
                 pass
             positions_out[f"c{chrom}_{position.pos}_{var_type}"] = {
                 sample: {
-                    "alleles": tuple(position.samples[sample].alleles), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
+                    "alleles": self._get_alleles(position.samples[sample], var_type), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
         return positions_out
-
+        
 def get_alleles(gene: object, subjects: list) -> list:
     """
     Prep for the ref/alt columns in a VCF
