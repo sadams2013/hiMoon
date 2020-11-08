@@ -49,9 +49,9 @@ class VarFile:
             try:
                 cn = sample["CN"]
                 if cn == 0:
-                    alleles = (0, 0)
+                    alleles = ("0", "0")
                 else:
-                    alleles = (1, cn - 1) #TODO this in untested
+                    alleles = ("1", str(cn - 1)) #TODO this in untested
             except KeyError:
                 alleles = None # This is probably going to cause an issue eventually
         return alleles
