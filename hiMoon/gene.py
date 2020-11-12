@@ -168,7 +168,7 @@ class AbstractGene:
                                     delim_whitespace=True,
                                     skiprows = 2,
                                     na_values= {4: ".", 5: "."},
-                                    dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype()},
+                                    dtype = {4: pd.Int64Dtype(), 5: pd.Int64Dtype(), 6: pd.StringDtype(), 7: pd.StringDtype()},
                                     names = ["Haplotype Name", "Gene", 
                                             "rsID", "ReferenceSequence",
                                             "Variant Start", "Variant Stop",
