@@ -192,7 +192,7 @@ class Haplotype:
         if self.solver == "GLPK":
             hap_prob.solve(GLPK(msg=0))
         else:
-            hap_prob.solve()
+            hap_prob.solve(PULP_CBC_CMD(msg=0))
 
     
     def lp_hap(self) -> tuple:
