@@ -43,17 +43,21 @@ class VarFile:
         Will always assume that at least one allele is one copy (unless CN == 0)
         Not necessarily accurate, but plain count data is inherently unphased so the distiction
         between (for example) 1/3 vs 2/2 is arbitrary. 
+
+        TODO: Note this function is under development and will likely cause issues depending on how CNVs are coded. 
         """
         alleles = sample.alleles
         if len(alleles) == 0 and var_type == "CNV":
             try:
                 cn = sample["CN"]
-                if cn == 0:
+                if cn is None:
+                    alleles = None
+                elif cn == 0:
                     alleles = ("0", "0")
                 else:
-                    alleles = ("1", str(cn - 1)) #TODO this in untested
+                    alleles = ("1", str(cn - 1))
             except KeyError:
-                alleles = None # This is probably going to cause an issue eventually
+                alleles = None
         return alleles
 
 
