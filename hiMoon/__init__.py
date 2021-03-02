@@ -23,6 +23,11 @@ import logging as LOGGING
 
 from .config import ConfigData
 
+SPECIAL_CHROM = {
+    "23": "X",
+    "24": "Y"
+}
+
 # Initialize logger
 LOGGING.getLogger().setLevel(LOGGING.WARNING)
 

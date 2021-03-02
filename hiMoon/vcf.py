@@ -19,7 +19,7 @@ from pysam import VariantFile
 
 from .template import PATH
 
-from . import LOGGING
+from . import LOGGING, SPECIAL_CHROM
 
 
 class VarFile:
@@ -74,6 +74,10 @@ class VarFile:
             dict: variants with a common ID schema that is matched by other methods
         """
         positions_out = {}
+        try:
+            chrom = SPECIAL_CHROM[chrom.replace("chr", "")]
+        except KeyError:
+            pass
         try:
             positions = self.vcf_file.fetch(str(chrom), minloc, maxloc)
         except ValueError:
