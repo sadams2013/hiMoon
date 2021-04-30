@@ -50,10 +50,7 @@ Working with the command line interface is fairly straightforward.
 You can start with: 
 
 ```
-usage: hiMoon [-h] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY]
-              [-c CONFIG_FILE] [-i] [-s SAMPLE] [-S SOLVER]
-              [-M ALLOWED_NO_MATCH]
-              [vcf_file]
+usage: hiMoon [-h] [-t TRANSLATION_TABLES] [-o OUTPUT_DIRECTORY] [-c CONFIG_FILE] [-i] [-s SAMPLE] [-S SOLVER] [-P] [vcf_file]
 
 Match haplotypes, return raw data and/or reports.
 
@@ -63,20 +60,17 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -t TRANSLATION_TABLES, --translation-tables TRANSLATION_TABLES
-                        Directory with translation tables or a single
-                        translation table file
+                        Directory with translation tables or a single translation table file
   -o OUTPUT_DIRECTORY, --output-directory OUTPUT_DIRECTORY
                         Directory for Output Files.
   -c CONFIG_FILE, --config-file CONFIG_FILE
-                        path to config file. -c default will write a config
-                        file that can be modified for this.
-  -i, --loglevel-info   Use more verbose logging output (useful for
-                        debugging).
+                        path to config file. -c default will write a config file that can be modified for this.
+  -i, --loglevel-info   Use more verbose logging output (useful for debugging).
   -s SAMPLE, --sample SAMPLE
-                        Single sample from multisample ID (if not specified,
-                        will do all)
+                        Single sample from multisample ID (if not specified, will do all)
   -S SOLVER, --solver SOLVER
                         Solver to use (GLPK or CBC), default = CBC
+  -P, --phased          Use phased constraint in LP
 ```
 
 You must provide a compressed (.vcf.gz, .bcf) and indexed (.tbi, .csi) VCF file. 
