@@ -63,7 +63,7 @@ class Haplotype:
         self.translation_table["MATCH"] = [m[0] for m in matches]
         self.translation_table["STRAND"] = [m[1] for m in matches]
         self.translation_table["VAR_ID"] = self.translation_table.apply(
-                lambda x: f'{x["ID"]}_{str(x.iloc[7]).strip("<>")}',
+                lambda x: f'{x["ID"]}_{str(x.iloc[6]).strip("<>")}_{str(x.iloc[7]).strip("<>")}',
                 axis = 1
                 )
         self.translation_table = self.translation_table.drop(self.translation_table.index[self.translation_table["MATCH"] == 99].tolist())
@@ -267,7 +267,6 @@ class Haplotype:
                 if new_called == called or len(new_called) == 0:
                     break
                 called = new_called
-
             return possible_haplotypes, haplotype_variants
     
 
