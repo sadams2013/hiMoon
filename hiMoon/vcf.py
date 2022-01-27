@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import csv
+import math
 
 import numpy as np
 
@@ -40,11 +41,7 @@ class VarFile:
     def _get_alleles(self, sample, var_type):
         """
         Get alleles if coded as GT, catch if coded as CN (for CNV)
-        Will always assume that at least one allele is one copy (unless CN == 0)
-        Not necessarily accurate, but plain count data is inherently unphased so the distiction
-        between (for example) 1/3 vs 2/2 is arbitrary. 
-
-        TODO: Note this function is under development and will likely cause issues depending on how CNVs are coded. 
+        Distributes copies across an assumed diploid sample (e.g. cn2 == 1/1, cn3 == 1/2, cn>=4 == 2/2)
         """
         alleles = sample.alleles
         if len(alleles) == 0 and var_type == "CNV":
@@ -55,7 +52,11 @@ class VarFile:
                 elif cn == 0:
                     alleles = ("0", "0")
                 else:
-                    alleles = ("1", str(cn - 1))
+                    if cn > 4: # TODO: design table functionality for CNV > 2 copies each
+                        cn = 4
+                    half_round = math.floor(int(cn) / 2)
+                    alleles = (str(half_round), str(cn - half_round))
+                    print(alleles)
             except KeyError:
                 alleles = None
         return alleles
