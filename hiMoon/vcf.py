@@ -92,7 +92,7 @@ class VarFile:
                 pass
             positions_out[f"c{chrom}_{position.pos}_{var_type}"] = {
                 sample: {
-                    "alleles": self._get_alleles(position.samples[sample], var_type), "phased": position.samples[sample].phased, "ref": position.ref} for sample in self.samples}
+                    "alleles": self._get_alleles(position.samples[sample], var_type), "phased": position.samples[sample].phased, "phase_set": position.samples[sample].get("PS", None),  "ref": position.ref} for sample in self.samples}
         return positions_out
         
 def get_alleles(gene: object, subjects: list) -> list:
@@ -147,13 +147,22 @@ def get_samples(gene_name: str, subjects: list, alleles: list) -> list:
     formats = []
     for s in subjects:
         calls = s.called_haplotypes[gene_name]["HAPS"]
-        formats.append(
-            {
-                "GT": get_dosage(calls[0][0], alleles),
-                "VA": calls[1][0],
-                "HC": 1 / len(calls[0])
-            }
-        )
+        if len(calls[0]) > 1:
+            formats.append(
+                {
+                    "GT": [None, None],
+                    "VA": ",".join(list(set(np.array(calls[1]).flatten().tolist()))),
+                    "HC": None
+                }
+            )
+        else:
+            formats.append(
+                {
+                    "GT": get_dosage(calls[0][0], alleles),
+                    "VA": calls[1][0],
+                    "HC": 1 / len(calls[0])
+                }
+            )
     return formats
 
 
