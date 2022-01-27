@@ -2,7 +2,7 @@ numpy
 pandas
 parameterized
 PuLP
-pysam==0.16.0.1
+pysam
 pytest
 PyYAML
 
