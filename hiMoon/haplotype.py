@@ -261,7 +261,7 @@ class Haplotype:
             if refs == 2:
                 possible_haplotypes.append((called, refs))
                 haplotype_variants.append(tuple(variants))
-                return possible_haplotypes, haplotype_variants
+                return possible_haplotypes, haplotype_variants, refs
             max_opt = hap_prob.objective.value()
             opt = max_opt
             while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and refs < 2 and hap_prob.status >= 0:
@@ -317,9 +317,9 @@ class Haplotype:
             # Happens when a phased call attempt fails
             self.phased = False
             called, variants, refs = self.lp_hap()
-        if refs > 0 and len(called) > 1:
-            called_prefer_ref = [i for i in called if i[1] > 0]
-            called = called_prefer_ref
+        #if refs > 0 and len(called) > 1:
+        #    called_prefer_ref = [i for i in called if i[1] > 0]
+        #    called = called_prefer_ref
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
         called_final = [i[0] for i in called]
