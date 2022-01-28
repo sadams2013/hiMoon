@@ -13,7 +13,6 @@
 #    limitations under the License.
 
 import sys
-import itertools
 
 import pandas as pd
 import numpy as np
@@ -68,7 +67,6 @@ class Haplotype:
                 axis = 1
                 )
         self.translation_table = self.translation_table.drop(self.translation_table.index[self.translation_table["MATCH"] == 99].tolist())
-        haps = self.translation_table["Haplotype Name"]
         no_match = self.translation_table[self.translation_table["MATCH"] == 0].iloc[:,0] # Haplotypes where there is any variant not matching
         drops = []
         for i in no_match.unique():
