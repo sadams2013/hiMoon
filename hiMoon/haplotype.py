@@ -62,6 +62,7 @@ class Haplotype:
         matches = self.translation_table.apply(self._match, axis = 1)
         self.translation_table["MATCH"] = [m[0] for m in matches]
         self.translation_table["STRAND"] = [m[1] for m in matches]
+        self.translation_table["PHASE_SET"] = [m[2] for m in matches]
         self.translation_table["VAR_ID"] = self.translation_table.apply(
                 lambda x: f'{x["ID"]}_{str(x.iloc[6]).strip("<>")}_{str(x.iloc[7]).strip("<>")}',
                 axis = 1
@@ -133,6 +134,7 @@ class Haplotype:
             int: 99 (missing), 0, 1, or 2 (corresponds to the number of matched alleles for a particular position)
         """
         strand = 0
+        phase_set = -1
         if row.iloc[8] in ["insertion", "deletion"]:
             new_pos = int(row["ID"].split("_")[1]) - 1
             ID = f'{row["ID"].split("_")[0]}_{new_pos}_SID'
@@ -141,20 +143,22 @@ class Haplotype:
         try:
             genotype = self.genotypes[ID]
         except KeyError: # Not in VCF
-            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand, phase_set
         try:
             vcf_geno = [self._mod_vcf_record(g, genotype["ref"]) for g in genotype["alleles"]]
         except AttributeError:
-            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand, phase_set
         if vcf_geno == ["-", "-"]:
-            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand
+            return int(self.config.MISSING_DATA_PARAMETERS["missing_variants"]), strand, phase_set
         tt_alt_geno = self._mod_tt_record(row.iloc[8], row.iloc[7])
         alt_matches = sum([vcf_geno.count(a) for a in tt_alt_geno])
         if alt_matches == 1 and genotype["phased"]:
             strand = 1 if max([vcf_geno.index(a) for a in tt_alt_geno]) == 1 else -1
+            phase_set = genotype["phase_set"]
         elif alt_matches == 2 and genotype["phased"]:
             strand = 3
-        return alt_matches, strand
+            phase_set = genotype["phase_set"]
+        return alt_matches, strand, phase_set
     
     def _haps_from_prob(self, lp_problem: object) -> tuple:
         """
@@ -167,7 +171,7 @@ class Haplotype:
         Returns:
             tuple: called haplotypes and associated information
         """
-        is_ref = False
+        refs = 0
         haps = []
         variants = []
         for v in lp_problem.variables():
@@ -179,14 +183,15 @@ class Haplotype:
                         haps.append((v.name, v.varValue))
         if len(haps) == 0:
             called = [self.reference, self.reference]
-            is_ref = True
+            refs = 2
         elif len(haps) == 2:
             called = [haps[0][0], haps[1][0]]
         else:
             called = np.array([np.repeat(i[0], i[1]) for i in haps]).flatten().tolist()
             if len(called) == 1:
                 called.append(self.reference)
-        return called, variants, len(haps), is_ref
+                refs = 1
+        return called, variants, len(haps), refs
     
     def _solve(self, hap_prob: object) -> object:
         if self.solver == "GLPK":
@@ -210,9 +215,20 @@ class Haplotype:
         for hap in self.haplotypes:
             trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
-
+        if self.phased:
+            # If phased, iterate over the raw matches and eliminate those that are out of phase
+            new_hap_list = []
+            new_hap_vars = []
+            for i in range(num_haps):
+                if self._get_strand_constraint(i):
+                    new_hap_list.append(self.haplotypes[i])
+                    new_hap_vars.append(hap_vars[i])
+                else:
+                    continue
+            self.haplotypes = new_hap_list
+            hap_vars = new_hap_vars
+            num_haps = len(self.haplotypes)
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
-
         # Define the haplotypes and variants variables
         haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
@@ -228,11 +244,6 @@ class Haplotype:
             # Otherwise, variants like CYP2D6*5 will be missed by the other methods
             if self.variants.iloc[i,3] == "CNV":
                 hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) == self.variants.iloc[i,1])
-        if self.phased:
-            for i in range(num_haps):
-                hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, []).size) <= 1 # max one strand
-            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) <= 1
-            hap_prob += lpSum(haplotypes[i] * self._get_strand_constraint(i, [0])[0] for i in range(num_haps)) >= -1
         # Set to maximize the number of variant alleles used
         hap_prob += lpSum(
             self.translation_table[
@@ -243,34 +254,34 @@ class Haplotype:
         if hap_prob.status != 1:
             if self.phased:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will be re-attempted with phasing off.")
-                return None, None
+                return None, None, None
             else:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be called")
-                return [], []
+                return [], [], 0
         else:
-            called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
-            if is_ref:
-                possible_haplotypes.append(tuple(called))
+            called, variants, hap_len, refs = self._haps_from_prob(hap_prob)
+            if refs == 2:
+                possible_haplotypes.append((called, refs))
                 haplotype_variants.append(tuple(variants))
                 return possible_haplotypes, haplotype_variants
             max_opt = hap_prob.objective.value()
             opt = max_opt
-            while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and not is_ref and hap_prob.status >= 0:
-                possible_haplotypes.append(tuple(sorted(called)))
+            while opt >= (max_opt - float(self.config.LP_PARAMS["optimal_decay"])) and refs < 2 and hap_prob.status >= 0:
+                possible_haplotypes.append(tuple([sorted(called), refs]))
                 haplotype_variants.append(tuple(sorted(variants)))
                 hap_prob += lpSum([h.value() * h for h in haplotypes]) <= hap_len - 1
                 self._solve(hap_prob)
                 if hap_prob.status != 1:
                     break
                 opt = hap_prob.objective.value()
-                new_called, variants, hap_len, is_ref = self._haps_from_prob(hap_prob)
+                new_called, variants, hap_len, refs = self._haps_from_prob(hap_prob)
                 if new_called == called or len(new_called) == 0:
                     break
                 called = new_called
-            return possible_haplotypes, haplotype_variants
-    
+            return possible_haplotypes, haplotype_variants, refs
 
-    def _get_strand_constraint(self, i: int, default: list) -> list:
+
+    def _get_strand_constraint(self, i: int) -> int:
         """
         Helps to assemble the constraint for phased data
         Looks at all strands that are part of a haplotype
@@ -282,10 +293,16 @@ class Haplotype:
         Returns:
             list: [description]
         """
-        sc = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]["STRAND"].unique()
-        sc = np.delete(sc, np.where(sc == [3]))
-        return(sc if sc.size > 0 else np.array(default))
-
+        table_sub = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]
+        table_sub = table_sub[table_sub["STRAND"] != 3]
+        phase_sets = table_sub["PHASE_SET"].unique()
+        for ps in phase_sets:
+            if len(table_sub[table_sub["PHASE_SET"] == ps]["STRAND"].unique()) > 1:
+                return False
+            else:
+                continue
+        return True
+        
 
     def optimize_hap(self) -> ():
         """
@@ -297,12 +314,16 @@ class Haplotype:
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
-        called, variants = self.lp_hap()
+        called, variants, refs = self.lp_hap()
         if called is None:
             # Happens when a phased call attempt fails
             self.phased = False
-            called, variants = self.lp_hap()
+            called, variants, refs = self.lp_hap()
+        if refs > 0 and len(called) > 1:
+            called_prefer_ref = [i for i in called if i[1] > 0]
+            called = called_prefer_ref
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
-        return called, variants
+        called_final = [i[0] for i in called]
+        return called_final, variants
       
