@@ -56,7 +56,6 @@ class VarFile:
                         cn = 4
                     half_round = math.floor(int(cn) / 2)
                     alleles = (str(half_round), str(cn - half_round))
-                    print(alleles)
             except KeyError:
                 alleles = None
         return alleles
@@ -92,7 +91,7 @@ class VarFile:
                 pass
             positions_out[f"c{chrom}_{position.pos}_{var_type}"] = {
                 sample: {
-                    "alleles": self._get_alleles(position.samples[sample], var_type), "phased": position.samples[sample].phased, "phase_set": position.samples[sample].get("PS", None),  "ref": position.ref} for sample in self.samples}
+                    "alleles": self._get_alleles(position.samples[sample], var_type), "phased": position.samples[sample].phased, "phase_set": position.samples[sample].get("PS", -1),  "ref": position.ref} for sample in self.samples}
         return positions_out
         
 def get_alleles(gene: object, subjects: list) -> list:
