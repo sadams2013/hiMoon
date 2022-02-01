@@ -231,7 +231,7 @@ class Haplotype:
         haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
         # Set constraint of two haplotypes selected
-        hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles)
+        hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles or complex SV)
        # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
