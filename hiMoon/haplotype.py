@@ -276,7 +276,7 @@ class Haplotype:
                 if new_called == called or len(new_called) == 0:
                     break
                 called = new_called
-            return possible_haplotypes, haplotype_variants, refs
+            return possible_haplotypes, haplotype_variants
 
 
     def _get_strand_constraint(self, i: int) -> int:
@@ -312,14 +312,15 @@ class Haplotype:
         if not self.matched:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
-        called, variants, refs = self.lp_hap()
+        called, variants = self.lp_hap()
+        refs = max([i[1] for i in called])
         if called is None:
             # Happens when a phased call attempt fails
             self.phased = False
             called, variants, refs = self.lp_hap()
-        #if refs > 0 and len(called) > 1:
-        #    called_prefer_ref = [i for i in called if i[1] > 0]
-        #    called = called_prefer_ref
+        if refs > 0 and len(called) > 1:
+            called_prefer_ref = [i for i in called if i[1] > 0]
+            called = called_prefer_ref
         if len(called) > 1:
             LOGGING.warning(f"Multiple genotypes possible for {self.sample_prefix}.")
         called_final = [i[0] for i in called]
