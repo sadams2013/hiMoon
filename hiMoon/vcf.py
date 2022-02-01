@@ -146,7 +146,7 @@ def get_samples(gene_name: str, subjects: list, alleles: list) -> list:
     formats = []
     for s in subjects:
         calls = s.called_haplotypes[gene_name]["HAPS"]
-        if len(calls[0]) > 1:
+        if len(calls[0]) > 1 or len(calls[0]) == 0:
             formats.append(
                 {
                     "GT": [None, None],

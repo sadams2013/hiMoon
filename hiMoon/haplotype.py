@@ -252,10 +252,10 @@ class Haplotype:
         if hap_prob.status != 1:
             if self.phased:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will be re-attempted with phasing off.")
-                return None, None, None
+                return None, None
             else:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be called")
-                return [], [], 0
+                return [], []
         else:
             called, variants, hap_len, refs = self._haps_from_prob(hap_prob)
             if refs == 2:
@@ -313,7 +313,7 @@ class Haplotype:
             print("You need to run the table_matcher function with genotyped before you can optimize")
             sys.exit(1)
         called, variants = self.lp_hap()
-        refs = max([i[1] for i in called])
+        refs = max([i[1] for i in called]) if len(called) > 0 else 0
         if called is None:
             # Happens when a phased call attempt fails
             self.phased = False
