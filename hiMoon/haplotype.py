@@ -226,10 +226,16 @@ class Haplotype:
             self.haplotypes = new_hap_list
             hap_vars = new_hap_vars
             num_haps = len(self.haplotypes)
+            # get unique and drop -1 from self.translation_table["PHASE_SET"]
+            self.phase_sets = self.translation_table["PHASE_SET"].unique()
+            self.phase_sets = self.phase_sets[self.phase_sets != -1]
+            num_phase_sets = len(self.phase_sets)
         hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
         # Define the haplotypes and variants variables
         haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
+        if self.phased: 
+            phase_sets = [LpVariable(str(phase_set), cat = "Integer", lowBound=0) for phase_set in self.phase_sets]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles or complex SV)
        # Limit alleles that can be chosen based on zygosity
@@ -248,6 +254,13 @@ class Haplotype:
                     (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
                     (self.translation_table["MATCH"] > 0)
                 ].shape[0] * haplotypes[i] for i in range(num_haps))
+        if self.phased: # constraint such that all phase-sets (PS tag) must be together
+            for i in range(num_phase_sets):
+                hap_prob += lpSum(
+                    self.translation_table[
+                            (self.translation_table.iloc[:,0] == self.haplotypes[j]) &
+                            (self.translation_table["PHASE_SET"] == self.phase_sets[i])
+                        ]["Haplotype Name"].unique().shape[0] * haplotypes[j] for j in range(num_haps)) == 1
         self._solve(hap_prob)
         if hap_prob.status != 1:
             if self.phased:
