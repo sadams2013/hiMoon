@@ -260,7 +260,7 @@ class Haplotype:
                     self.translation_table[
                             (self.translation_table.iloc[:,0] == self.haplotypes[j]) &
                             (self.translation_table["PHASE_SET"] == self.phase_sets[i])
-                        ]["Haplotype Name"].unique().shape[0] * haplotypes[j] for j in range(num_haps)) == 1
+                        ]["Haplotype Name"].unique().shape[0] * haplotypes[j] for j in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])
         self._solve(hap_prob)
         if hap_prob.status != 1:
             if self.phased:
