@@ -172,9 +172,12 @@ class Haplotype:
         refs = 0
         haps = []
         variants = []
+        phase_sets = []
         for v in lp_problem.variables():
             if v.varValue:
-                if v.varValue > 0:
+                if "PHASE_SET" in v.name:
+                    phase_sets.append(int(v.varValue))
+                elif v.varValue > 0:
                     if v.name.split("_")[0] == f'c{self.chromosome}':
                         variants.append(v.name)
                     else:
@@ -189,7 +192,7 @@ class Haplotype:
             if len(called) == 1:
                 called.append(self.reference)
                 refs = 1
-        return called, variants, len(haps), refs
+        return called, variants, len(haps), refs, phase_sets
     
     def _solve(self, hap_prob: object) -> object:
         if self.solver == "GLPK":
@@ -213,6 +216,9 @@ class Haplotype:
         for hap in self.haplotypes:
             trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
             hap_vars.append([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]])
+            #hap_vars.append(tuple([1 if var in trans["VAR_ID"].unique() else 0 for var in self.variants["VAR_ID"]]))
+        hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
+        # Define the haplotypes and variants variables
         if self.phased:
             # If phased, iterate over the raw matches and eliminate those that are out of phase
             new_hap_list = []
@@ -230,15 +236,22 @@ class Haplotype:
             self.phase_sets = self.translation_table["PHASE_SET"].unique()
             self.phase_sets = self.phase_sets[self.phase_sets != -1]
             num_phase_sets = len(self.phase_sets)
-        hap_prob = LpProblem("Haplotype Optimization", LpMaximize)
-        # Define the haplotypes and variants variables
+            # For each phase-set, which haplotypes have variants that use it?
+            phase_set_haps = []
+            for i in range(num_phase_sets):
+                psv = []
+                for hap in self.haplotypes:
+                    trans = self.translation_table[self.translation_table.iloc[:,0] == hap]
+                    if self.phase_sets[i] in trans["PHASE_SET"].unique():
+                        psv.append(1)
+                    else:
+                        psv.append(0)
+                phase_set_haps.append(psv)
         haplotypes = [LpVariable(hap, cat = "Integer", lowBound=0, upBound=2) for hap in self.haplotypes]
         variants = [LpVariable(var, cat = "Binary") for var in self.variants["VAR_ID"]]
-        if self.phased: 
-            phase_sets = [LpVariable(str(phase_set), cat = "Integer", lowBound=0) for phase_set in self.phase_sets]
         # Set constraint of two haplotypes selected
         hap_prob += (lpSum(haplotypes[i] for i in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])) # Cannot choose more than x haplotypes (may be increased to find novel sub-alleles or complex SV)
-       # Limit alleles that can be chosen based on zygosity
+        # Limit alleles that can be chosen based on zygosity
         for i in range(num_vars): # Iterate over every variant
             # A variant allele can only be used once per haplotype, up to two alleles per variant
             hap_prob += (variants[i] <= (lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))))
@@ -248,19 +261,34 @@ class Haplotype:
             # Otherwise, variants like CYP2D6*5 will be missed by the other methods
             if self.variants.iloc[i,3] == "CNV":
                 hap_prob += ((lpSum(hap_vars[k][i] * haplotypes[k] for k in range(num_haps))) == self.variants.iloc[i,1])
-        # Set to maximize the number of variant alleles used
-        hap_prob += lpSum(
-            self.translation_table[
-                    (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
-                    (self.translation_table["MATCH"] > 0)
-                ].shape[0] * haplotypes[i] for i in range(num_haps))
-        if self.phased: # constraint such that all phase-sets (PS tag) must be together
+        # Set to maximize the number of variant alleles used (broken by phased or not phased to add an additional maximize constraint)
+        if self.phased: 
+            for i in range(num_phase_sets):
+                # Single phase set cannot be used more than max_haps (probably a redundant constraint)
+                hap_prob += lpSum(phase_set_haps[i][k] * haplotypes[k] for k in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])
+            # All variants in a phase set must be together on a single haplotype
             for i in range(num_phase_sets):
                 hap_prob += lpSum(
                     self.translation_table[
                             (self.translation_table.iloc[:,0] == self.haplotypes[j]) &
                             (self.translation_table["PHASE_SET"] == self.phase_sets[i])
                         ]["Haplotype Name"].unique().shape[0] * haplotypes[j] for j in range(num_haps)) <= int(self.config.LP_PARAMS["max_haps"])
+             # Maximize the number of variants - per - phase set
+             ## Helps to ensure that it doesn't split phase sets across two haplotypes, which is surprisingly hard to stop
+             ## Because this is easy to over-constrain
+            hap_prob += lpSum(
+                sum(list(self.translation_table[
+                        (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
+                        (self.translation_table["MATCH"] > 0)].shape[0] * haplotypes[i] for i in range(num_haps))) + 
+                sum(list(self.translation_table[
+                        (self.translation_table.iloc[:,0] == self.haplotypes[j]) &
+                        (self.translation_table["PHASE_SET"] == self.phase_sets[k])]["VAR_ID"].unique().shape[0]**2 * haplotypes[j] for j in range(num_haps) for k in range(num_phase_sets))))
+        else:
+            hap_prob += lpSum(
+                sum(list(self.translation_table[
+                        (self.translation_table.iloc[:,0] == self.haplotypes[i]) &
+                        (self.translation_table["MATCH"] > 0)].shape[0] * haplotypes[i] for i in range(num_haps)))
+            )
         self._solve(hap_prob)
         if hap_prob.status != 1:
             if self.phased:
@@ -270,7 +298,7 @@ class Haplotype:
                 LOGGING.warning(f"No feasible solution found, {self.sample_prefix} will not be called")
                 return [], []
         else:
-            called, variants, hap_len, refs = self._haps_from_prob(hap_prob)
+            called, variants, hap_len, refs, phase_sets = self._haps_from_prob(hap_prob)
             if refs == 2:
                 possible_haplotypes.append((called, refs))
                 haplotype_variants.append(tuple(variants))
@@ -285,7 +313,7 @@ class Haplotype:
                 if hap_prob.status != 1:
                     break
                 opt = hap_prob.objective.value()
-                new_called, variants, hap_len, refs = self._haps_from_prob(hap_prob)
+                new_called, variants, hap_len, refs, phase_sets = self._haps_from_prob(hap_prob)
                 if new_called == called or len(new_called) == 0:
                     break
                 called = new_called
@@ -297,23 +325,19 @@ class Haplotype:
         Helps to assemble the constraint for phased data
         Looks at all strands that are part of a haplotype
         Removes homozygous calls
-        Args:
-            i (int): haplotype index
-            default (list): default return if nothing matches or if all are homozygous
-
-        Returns:
-            list: [description]
+        Ensures that a single haplotype only uses one phase set (anything else would be impossible)
         """
         table_sub = self.translation_table[self.translation_table.iloc[:,0] == self.haplotypes[i]]
         table_sub = table_sub[table_sub["STRAND"] != 3]
         phase_sets = table_sub["PHASE_SET"].unique()
         for ps in phase_sets:
+            # if the strand 
             if len(table_sub[table_sub["PHASE_SET"] == ps]["STRAND"].unique()) > 1:
                 return False
             else:
                 continue
         return True
-        
+    
 
     def optimize_hap(self) -> ():
         """
