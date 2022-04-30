@@ -122,6 +122,7 @@ class AbstractGene:
                 )
         new_table = translation_table.drop(["BASE", "SUFFIX"], axis = 1)
         added_rows = pd.DataFrame(new_rows)
+        cnv_table.drop(cnv_table[cnv_table["Haplotype Name"].str.contains("_")].index, axis = 0, inplace = True)
         return pd.concat([new_table, added_rows, cnv_table], ignore_index=True)
 
     def get_type(self, vtype: str) -> str:
