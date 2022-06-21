@@ -150,7 +150,7 @@ def get_samples(gene_name: str, subjects: list, alleles: list) -> list:
             formats.append(
                 {
                     "GT": [None, None],
-                    "VA": ",".join(list(set(np.array(calls[1]).flatten().tolist()))),
+                    "VA": ",".join(list(set([v for i in calls[1] for v in i]))),
                     "HC": None
                 }
             )
