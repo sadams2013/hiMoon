@@ -24,7 +24,7 @@ class AbstractGene:
     names haplotypes and subjects. 
     """
 
-    def __init__(self, translation_table: str, vcf: VarFile = None, 
+    def __init__(self, translation_table, vcf: VarFile = None, 
                     variants = None, solver: str = "CBC",
                     config = None, phased = False) -> None:
         """
@@ -39,7 +39,21 @@ class AbstractGene:
         self.solver = solver
         self.gene = None
         self.accession = None
-        self.read_translation_table(translation_table)
+        # test if translation table is a path or a dataframe
+        if isinstance(translation_table, str):
+            self.read_translation_table(translation_table)
+        else:
+            self.version = ""
+            self.translation_table = translation_table
+        try:
+            self.reference = self.translation_table[self.translation_table["rsID"] == "REFERENCE"]["Haplotype Name"][0]
+        except (KeyError, IndexError):
+            self.reference = "REF"
+        self.translation_table = self.translation_table[self.translation_table["ReferenceSequence"] != "."]
+        self.accession = self.translation_table.iloc[-1, 3]
+        self.chromosome = self.config.CHROMOSOME_ACCESSIONS[self.accession]
+        self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
+        self.translation_table["EXCLUDE"] = 0
         self.gene = self.translation_table.iloc[-1, 1]
         self.max = self.translation_table.iloc[:,5].dropna().max() + int(self.config.VARIANT_QUERY_PARAMETERS["5p_offset"])
         self.min = self.translation_table.iloc[:,4].dropna().min() - int(self.config.VARIANT_QUERY_PARAMETERS["3p_offset"])
@@ -47,6 +61,7 @@ class AbstractGene:
             self.variants = vcf.get_range(self.chromosome, self.min, self.max)
         else:
             self.variants = variants
+        print(self.variants)
 
     def __str__(self):
         return self.gene
@@ -182,13 +197,3 @@ class AbstractGene:
         if cnv_table is not None:
             self.translation_table = self._merge_tables(self.translation_table, cnv_table)
         self.translation_table.iloc[:,0] = self.translation_table.apply(lambda x: x.iloc[0].replace("*", "(star)"), axis = 1)
-        try:
-            self.reference = self.translation_table[self.translation_table["rsID"] == "REFERENCE"]["Haplotype Name"][0]
-        except IndexError:
-            self.reference = "REF"
-        self.translation_table = self.translation_table[self.translation_table["ReferenceSequence"] != "."]
-        self.accession = self.translation_table.iloc[-1, 3]
-        self.chromosome = self.config.CHROMOSOME_ACCESSIONS[self.accession]
-        self.translation_table["ID"] = self.translation_table.apply(lambda x: f"c{self.chromosome}_{x['Variant Start']}_{self.get_type(x['Type'])}", axis = 1)
-        self.translation_table["EXCLUDE"] = 0
-        
